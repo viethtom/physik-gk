@@ -758,6 +758,21 @@ footer.site-footer {
   border-top: 1px solid var(--border);
 }
 
+.footer-legal { margin-top: 8px; }
+.footer-legal a { color: var(--text-muted); text-decoration: none; }
+.footer-legal a:hover { color: var(--accent); text-decoration: underline; }
+
+.legal { max-width: 760px; }
+.legal h2 { font-size: 1.15rem; margin-top: 1.8em; }
+.legal ul { padding-left: 1.3em; margin: 0 0 1em; }
+.placeholder {
+  background: var(--amber-soft);
+  color: var(--amber);
+  border: 1px dashed var(--amber);
+  border-radius: 6px;
+  padding: 1px 8px;
+}
+
 /* ---------- Misc ---------- */
 
 .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 20px; }
