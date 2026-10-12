@@ -60,8 +60,27 @@ npx serve .
 python -m http.server 8000
 ```
 
-Wichtig: die Seiten verlinken sich über **root-relative Pfade** (`/assets/...`, `/themen/...`), die Seite muss
-also vom Projekt-Wurzelverzeichnis aus ausgeliefert werden (nicht `file://` direkt öffnen).
+Alle Seiten verlinken sich über **relative Pfade** (`../assets/...`, `../../index.html` usw.). Dadurch läuft die
+Website unter jedem Unterpfad (GitHub Pages `https://<user>.github.io/<repo>/`, Netlify, lokaler Server) und
+lässt sich sogar direkt per Doppelklick auf `index.html` im Browser öffnen. Beim Anlegen neuer Seiten die
+Pfade entsprechend der Ordnertiefe relativ halten (Ebene 1: `../`, Ebene 2: `../../`).
+
+## Deployment auf GitHub Pages
+
+1. Auf [github.com/new](https://github.com/new) ein neues, **öffentliches** Repository anlegen (z. B. `physik-gk`),
+   ohne README/.gitignore/Lizenz (das Projekt bringt bereits alles mit).
+2. Im Projektordner:
+   ```bash
+   git remote add origin https://github.com/<DEIN-NAME>/physik-gk.git
+   git push -u origin main
+   ```
+3. Im Repository: **Settings → Pages → Build and deployment → Source: „Deploy from a branch“ → Branch `main`,
+   Ordner `/ (root)` → Save.**
+4. Nach ca. 1–2 Minuten ist die Seite unter `https://<DEIN-NAME>.github.io/physik-gk/` erreichbar.
+
+Spätere Änderungen: `git add -A`, `git commit -m "…"`, `git push` — GitHub Pages aktualisiert sich automatisch.
+Die Datei `.nojekyll` sorgt dafür, dass GitHub die Dateien unverändert ausliefert (ohne Jekyll-Verarbeitung);
+der lokale Ordner `.claude/` ist per `.gitignore` vom Upload ausgeschlossen.
 
 ## Deployment auf Netlify
 
