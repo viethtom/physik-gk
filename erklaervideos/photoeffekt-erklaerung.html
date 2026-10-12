@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warum brauchte es das Lichtquant? — Erklär-Animation — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/erklaervideos/index.html">Erklärvideos</a><span class="sep">›</span>
+    <span>Warum brauchte es das Lichtquant?</span>
+  </div>
+
+  <section class="hero" style="padding-top:24px; padding-bottom: 10px;">
+    <div class="eyebrow">Erklär-Animation · Quantenobjekte</div>
+    <h1>Warum brauchte es das Lichtquant?</h1>
+    <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+      Szene für Szene: vom klassischen Wellenbild des Lichts zu Einsteins Photon. Mit Pfeiltasten ◀ ▶ oder
+      den Buttons navigierbar.
+    </p>
+  </section>
+
+  <div id="player"></div>
+
+  <p class="center-note">
+    Willst du die Formel selbst an Messdaten prüfen? → <a href="/themen/quantenobjekte/photoeffekt.html">Zur Photoeffekt-Simulation</a>
+  </p>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Erklär-Animation im Stil bekannter Wissenschafts-Erklärvideos (web-nativ, ohne Videodatei)</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script>
+(function () {
+  const ACCENT = "var(--accent)", TEAL = "var(--teal)", AMBER = "var(--amber)", ROSE = "var(--rose)", TEXT = "var(--text)", MUTED = "var(--text-muted)";
+
+  function text(x, y, str, opts = {}) {
+    const t = svgEl("text", Object.assign({
+      x, y, fill: TEXT, "font-family": "system-ui,sans-serif",
+      "font-size": opts.size || 20, "font-weight": opts.weight || 400,
+      "text-anchor": opts.anchor || "middle", "data-anim": "1"
+    }, opts.attrs || {}));
+    t.textContent = str;
+    if (opts.delay) t.setAttribute("data-delay", opts.delay);
+    return t;
+  }
+
+  function platePlate(svg, x, y, w, h, delay) {
+    const r = svgEl("rect", { x, y, width: w, height: h, fill: "#565d73", rx: 3, "data-anim": "1", "data-delay": delay || 0 });
+    svg.appendChild(r);
+    return r;
+  }
+
+  function wavyArrow(svg, x1, y1, x2, y2, color, delay) {
+    const g = svgEl("g", { "data-anim": "1", "data-delay": delay || 0 });
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    const n = Math.max(3, Math.round(len / 18));
+    let d = `M ${x1} ${y1}`;
+    for (let i = 1; i <= n; i++) {
+      const t = i / n;
+      const px = x1 + dx * t, py = y1 + dy * t;
+      const perp = (i % 2 === 0 ? 1 : -1) * 6;
+      const nx = -dy / len, ny = dx / len;
+      d += ` L ${px + nx * perp} ${py + ny * perp}`;
+    }
+    g.appendChild(svgEl("path", { d, stroke: color, fill: "none", "stroke-width": 2.4 }));
+    g.appendChild(svgEl("polygon", { points: `${x2},${y2} ${x2 - 8},${y2 - 4} ${x2 - 8},${y2 + 4}`, fill: color, transform: `rotate(${Math.atan2(dy, dx) * 180 / Math.PI}, ${x2}, ${y2})` }));
+    svg.appendChild(g);
+    return g;
+  }
+
+  function electronDot(svg, x, y, delay) {
+    const c = svgEl("circle", { cx: x, cy: y, r: 6, fill: TEAL, "data-anim": "1", "data-delay": delay || 0 });
+    svg.appendChild(c);
+    return c;
+  }
+
+  function photonIcon(svg, x, y, color, delay) {
+    const g = svgEl("g", { "data-anim": "1", "data-delay": delay || 0, transform: `translate(${x},${y})` });
+    let d = "M -22 0";
+    for (let i = 0; i < 4; i++) {
+      const sign = i % 2 === 0 ? -1 : 1;
+      d += ` Q ${-22 + (i + 0.5) * 11} ${sign * 9} ${-22 + (i + 1) * 11} 0`;
+    }
+    g.appendChild(svgEl("path", { d, stroke: color, fill: "none", "stroke-width": 3, "stroke-linecap": "round" }));
+    svg.appendChild(g);
+    return g;
+  }
+
+  function axes(svg, x0, y0, w, h, delay) {
+    const g = svgEl("g", { "data-anim": "1", "data-delay": delay || 0 });
+    g.appendChild(svgEl("line", { x1: x0, y1: y0, x2: x0, y2: y0 - h, stroke: MUTED, "stroke-width": 1.5 }));
+    g.appendChild(svgEl("line", { x1: x0, y1: y0, x2: x0 + w, y2: y0, stroke: MUTED, "stroke-width": 1.5 }));
+    svg.appendChild(g);
+    return g;
+  }
+
+  const scenes = [
+    {
+      caption: `<span class="scene-title-badge">1 / 7 · Die Frage</span>Licht trifft auf eine Metallplatte. Manchmal werden Elektronen herausgelöst — manchmal nicht. <strong>Wovon hängt das ab?</strong>`,
+      render(svg) {
+        svg.appendChild(text(400, 90, "Der Photoeffekt", { size: 34, weight: 700 }));
+        platePlate(svg, 300, 300, 200, 30, 200);
+        wavyArrow(svg, 150, 150, 320, 290, "#ffd166", 400);
+        wavyArrow(svg, 200, 130, 380, 290, "#ffd166", 500);
+        electronDot(svg, 470, 300, 900);
+        wavyArrow(svg, 460, 320, 520, 260, TEAL, 1000);
+        svg.appendChild(text(400, 360, "Kathode", { size: 14, attrs: { fill: MUTED }, delay: 200 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">2 / 7 · Klassische Erwartung</span>Im klassischen Wellenbild steckt die Energie einer Welle in ihrer <strong>Amplitude</strong> — also in der Helligkeit des Lichts.`,
+      render(svg) {
+        svg.appendChild(text(400, 70, "Klassische Erwartung (Wellenmodell)", { size: 24, weight: 700 }));
+        const g = svgEl("g", { "data-anim": "1", "data-delay": 200 });
+        let d = "M 100 220";
+        for (let i = 0; i < 14; i++) {
+          const sign = i % 2 === 0 ? -1 : 1;
+          d += ` Q ${100 + (i + 0.5) * 43} ${220 + sign * 50} ${100 + (i + 1) * 43} 220`;
+        }
+        g.appendChild(svgEl("path", { d, stroke: ACCENT, fill: "none", "stroke-width": 3 }));
+        svg.appendChild(g);
+        svg.appendChild(text(400, 320, "Erwartung: mehr Helligkeit (Intensität)", { size: 18, delay: 700 }));
+        svg.appendChild(text(400, 350, "→ energiereichere Elektronen?", { size: 18, weight: 700, attrs: { fill: ACCENT }, delay: 900 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">3 / 7 · Der überraschende Befund</span>Sehr helles rotes Licht: <strong>nichts passiert</strong>. Schwaches blaues/UV-Licht: <strong>sofort</strong> Elektronen. Intensität allein erklärt das nicht!`,
+      render(svg) {
+        svg.appendChild(text(200, 60, "Helles rotes Licht", { size: 18, weight: 700, attrs: { fill: ROSE } }));
+        platePlate(svg, 130, 260, 140, 24, 200);
+        for (let i = 0; i < 4; i++) wavyArrow(svg, 90 + i * 6, 100 + i * 8, 170 + i * 12, 255, "#ff6b6b", 300 + i * 80);
+        svg.appendChild(text(200, 330, "kein Photoeffekt", { size: 15, attrs: { fill: MUTED }, delay: 1000 }));
+        svg.appendChild(text(200, 350, "✕", { size: 22, weight: 700, attrs: { fill: ROSE }, delay: 1100 }));
+
+        svg.appendChild(text(600, 60, "Schwaches blaues Licht", { size: 18, weight: 700, attrs: { fill: ACCENT } }));
+        platePlate(svg, 530, 260, 140, 24, 200);
+        wavyArrow(svg, 560, 130, 590, 255, "#8fd3ff", 400);
+        electronDot(svg, 660, 260, 1100);
+        wavyArrow(svg, 650, 280, 700, 210, TEAL, 1300);
+        svg.appendChild(text(600, 330, "sofort Photoeffekt", { size: 15, attrs: { fill: MUTED }, delay: 1000 }));
+        svg.appendChild(text(600, 350, "✓", { size: 22, weight: 700, attrs: { fill: TEAL }, delay: 1100 }));
+
+        svg.appendChild(svgEl("line", { x1: 400, y1: 40, x2: 400, y2: 390, stroke: "var(--border)", "stroke-width": 1, "data-anim": "1", "data-delay": 100 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">4 / 7 · Einsteins Idee</span>Einstein (1905): Licht besteht aus <strong>Energiepaketen</strong> — Photonen. Jedes Photon trägt die Energie <span class="formula-inline">E = h·f</span>, abhängig nur von der Frequenz.`,
+      render(svg) {
+        svg.appendChild(text(400, 80, "Einsteins Lichtquantenhypothese", { size: 26, weight: 700 }));
+        photonIcon(svg, 400, 220, ACCENT, 300);
+        svg.appendChild(text(400, 290, "E = h · f", { size: 32, weight: 700, attrs: { fill: ACCENT, "font-family": "monospace" }, delay: 700 }));
+        svg.appendChild(text(400, 330, "h = Planck’sches Wirkungsquantum (Naturkonstante)", { size: 15, attrs: { fill: MUTED }, delay: 1000 }));
+        svg.appendChild(text(400, 355, "f = Frequenz des Lichts", { size: 15, attrs: { fill: MUTED }, delay: 1150 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">5 / 7 · Energie-Bilanz</span>Ein Photon überträgt seine <em>gesamte</em> Energie an ein Elektron: ein Teil überwindet die Austrittsarbeit, der Rest bleibt als kinetische Energie übrig.`,
+      render(svg) {
+        svg.appendChild(text(400, 60, "Energiebilanz beim Photoeffekt", { size: 22, weight: 700 }));
+        photonIcon(svg, 160, 200, ACCENT, 100);
+        wavyArrow(svg, 200, 200, 300, 250, ACCENT, 500);
+        platePlate(svg, 300, 250, 160, 24, 200);
+        electronDot(svg, 420, 250, 900);
+        wavyArrow(svg, 420, 240, 480, 180, TEAL, 1100);
+
+        svg.appendChild(text(400, 340, "E_Photon = W_A + E_kin", { size: 26, weight: 700, attrs: { fill: TEXT, "font-family": "monospace" }, delay: 1400 }));
+        svg.appendChild(text(220, 380, "W_A: Austrittsarbeit (löst Elektron)", { size: 14, attrs: { fill: AMBER }, delay: 1700 }));
+        svg.appendChild(text(580, 380, "E_kin: Restenergie (Bewegung)", { size: 14, attrs: { fill: TEAL }, delay: 1850 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">6 / 7 · Die Messbarkeit</span>Bremst man die Elektronen mit einer Gegenspannung <span class="formula-inline">U</span> ab, gilt <span class="formula-inline">eU = hf − W_A</span> — eine Gerade mit Steigung h/e.`,
+      render(svg) {
+        svg.appendChild(text(400, 50, "U_grenz in Abhängigkeit von f", { size: 22, weight: 700 }));
+        axes(svg, 150, 350, 500, 260, 200);
+        svg.appendChild(text(130, 370, "0", { size: 13, attrs: { fill: MUTED }, delay: 200 }));
+        svg.appendChild(text(650, 375, "f", { size: 16, weight: 700, delay: 200 }));
+        svg.appendChild(text(120, 90, "U_grenz", { size: 16, weight: 700, delay: 200 }));
+
+        const line = svgEl("line", { x1: 230, y1: 350, x2: 600, y2: 100, stroke: ACCENT, "stroke-width": 3, "data-anim": "1", "data-delay": 600 });
+        svg.appendChild(line);
+        svg.appendChild(svgEl("circle", { cx: 230, cy: 350, r: 4, fill: MUTED, "data-anim": "1", "data-delay": 900 }));
+        svg.appendChild(text(230, 375, "f₀", { size: 13, attrs: { fill: MUTED }, delay: 1000 }));
+
+        svg.appendChild(text(470, 160, "Steigung = h/e", { size: 16, weight: 700, attrs: { fill: ACCENT }, delay: 1300 }));
+        svg.appendChild(text(300, 330, "Achsenabschnitt = −W_A/e", { size: 14, attrs: { fill: AMBER }, delay: 1500 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">7 / 7 · Fazit</span>Aus Steigung und Achsenabschnitt dieser Geraden lassen sich <strong>h</strong> und die <strong>Austrittsarbeit</strong> bestimmen — genau das kannst du jetzt selbst in der Simulation messen.`,
+      render(svg) {
+        svg.appendChild(text(400, 160, "Licht ist gequantelt.", { size: 30, weight: 700, delay: 100 }));
+        svg.appendChild(text(400, 210, "Jedes Photon: E = h·f", { size: 20, attrs: { fill: ACCENT }, delay: 500 }));
+        svg.appendChild(text(400, 260, "eU_grenz = h·f − W_A", { size: 24, weight: 700, attrs: { "font-family": "monospace" }, delay: 900 }));
+        photonIcon(svg, 400, 330, TEAL, 1300);
+      }
+    },
+  ];
+
+  new ScenePlayer(qs("#player"), scenes);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wie verrät ein Spektrum den Aufbau der Atome? — Erklär-Animation — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/erklaervideos/index.html">Erklärvideos</a><span class="sep">›</span>
+    <span>Wie verrät ein Spektrum den Aufbau der Atome?</span>
+  </div>
+
+  <section class="hero" style="padding-top:24px; padding-bottom: 10px;">
+    <div class="eyebrow">Erklär-Animation · Strahlung und Materie</div>
+    <h1>Wie verrät ein Spektrum den Aufbau der Atome?</h1>
+    <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+      Szene für Szene: von diskreten Spektrallinien über das Problem der klassischen Physik zu Bohrs
+      Atommodell. Mit Pfeiltasten ◀ ▶ oder den Buttons navigierbar.
+    </p>
+  </section>
+
+  <div id="player"></div>
+
+  <p class="center-note">
+    Willst du die Balmer-Serie selbst vermessen? → <a href="/themen/strahlung-materie/linienspektren.html">Zur Linienspektren-Simulation</a>
+  </p>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Erklär-Animation im Stil bekannter Wissenschafts-Erklärvideos (web-nativ, ohne Videodatei)</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script>
+(function () {
+  const ACCENT = "var(--accent)", TEAL = "var(--teal)", AMBER = "var(--amber)", ROSE = "var(--rose)", TEXT = "var(--text)", MUTED = "var(--text-muted)";
+
+  function text(x, y, str, opts = {}) {
+    const t = svgEl("text", Object.assign({
+      x, y, fill: TEXT, "font-family": "system-ui,sans-serif",
+      "font-size": opts.size || 20, "font-weight": opts.weight || 400,
+      "text-anchor": opts.anchor || "middle", "data-anim": "1"
+    }, opts.attrs || {}));
+    t.textContent = str;
+    if (opts.delay) t.setAttribute("data-delay", opts.delay);
+    return t;
+  }
+
+  function orbit(svg, cx, cy, rx, ry, color, delay) {
+    const e = svgEl("ellipse", { cx, cy, rx, ry, fill: "none", stroke: color, "stroke-width": 1.6, "data-anim": "1", "data-delay": delay || 0 });
+    svg.appendChild(e);
+    return e;
+  }
+  function nucleus(svg, cx, cy, delay) {
+    const c = svgEl("circle", { cx, cy, r: 12, fill: ACCENT, "data-anim": "1", "data-delay": delay || 0 });
+    svg.appendChild(c);
+    return c;
+  }
+  function electron(svg, x, y, color, delay) {
+    const c = svgEl("circle", { cx: x, cy: y, r: 5, fill: color || TEAL, "data-anim": "1", "data-delay": delay || 0 });
+    svg.appendChild(c);
+    return c;
+  }
+  function photonWiggle(svg, x1, y1, x2, y2, color, delay) {
+    const g = svgEl("g", { "data-anim": "1", "data-delay": delay || 0 });
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+    const n = Math.max(3, Math.round(len / 16));
+    let d = `M ${x1} ${y1}`;
+    for (let i = 1; i <= n; i++) {
+      const t = i / n, px = x1 + dx * t, py = y1 + dy * t;
+      const perp = (i % 2 === 0 ? 1 : -1) * 5;
+      const nx = -dy / len, ny = dx / len;
+      d += ` L ${px + nx * perp} ${py + ny * perp}`;
+    }
+    g.appendChild(svgEl("path", { d, stroke: color, fill: "none", "stroke-width": 2.2 }));
+    g.appendChild(svgEl("polygon", { points: `${x2},${y2} ${x2 - 7},${y2 - 3} ${x2 - 7},${y2 + 3}`, fill: color, transform: `rotate(${Math.atan2(dy, dx) * 180 / Math.PI}, ${x2}, ${y2})` }));
+    svg.appendChild(g);
+  }
+  function levelLines(svg, x0, x1, ys, delay) {
+    ys.forEach((y, i) => {
+      svg.appendChild(svgEl("line", { x1: x0, y1: y, x2: x1, y2: y, stroke: MUTED, "stroke-width": 1.5, "data-anim": "1", "data-delay": (delay || 0) + i * 100 }));
+    });
+  }
+
+  const scenes = [
+    {
+      caption: `<span class="scene-title-badge">1 / 7 · Die Beobachtung</span>Angeregte Gase leuchten nicht in allen Farben — sondern nur in ganz bestimmten. Warum leuchtet Neon rot, Natrium gelb?`,
+      render(svg) {
+        svg.appendChild(text(400, 60, "Gasentladungslampen", { size: 26, weight: 700 }));
+        // Röhre
+        const tube = svgEl("rect", { x: 150, y: 150, width: 200, height: 40, rx: 20, fill: "#ff5555", "data-anim": "1", "data-delay": 200 });
+        svg.appendChild(tube);
+        svg.appendChild(text(250, 220, "Neon", { size: 14, attrs: { fill: MUTED }, delay: 300 }));
+        // Spektrallinien rechts
+        [520, 545, 565, 590, 615].forEach((x, i) => {
+          svg.appendChild(svgEl("rect", { x, y: 130, width: 5, height: 80, fill: i % 2 === 0 ? "#ff5555" : "#ffb347", "data-anim": "1", "data-delay": 700 + i * 120 }));
+        });
+        svg.appendChild(text(565, 235, "diskretes Linienspektrum", { size: 13, attrs: { fill: MUTED }, delay: 1400 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">2 / 7 · Das Problem der klassischen Physik</span>Klassisch müsste ein kreisendes Elektron ständig Energie abstrahlen und <strong>in den Kern stürzen</strong> — Atome dürften gar nicht stabil existieren!`,
+      render(svg) {
+        svg.appendChild(text(400, 50, "Das klassische Problem", { size: 24, weight: 700 }));
+        nucleus(svg, 400, 220, 200);
+        // Spiralbahn
+        const g = svgEl("g", { "data-anim": "1", "data-delay": 400 });
+        let d = "M 400 100";
+        let r = 120;
+        for (let a = 0; a <= 12 * Math.PI; a += 0.2) {
+          r -= 0.5;
+          if (r < 14) break;
+          const x = 400 + r * Math.cos(a), y = 220 + r * 0.6 * Math.sin(a);
+          d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+        }
+        g.appendChild(svgEl("path", { d, stroke: ROSE, fill: "none", "stroke-width": 2, "stroke-dasharray": "3 3" }));
+        svg.appendChild(g);
+        svg.appendChild(text(400, 350, "Widerspruch: Atome sind aber stabil!", { size: 16, weight: 700, attrs: { fill: ROSE }, delay: 1400 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">3 / 7 · Bohrs Postulate</span>Niels Bohr (1913): Elektronen bewegen sich nur auf <strong>bestimmten, erlaubten Bahnen</strong> — auf diesen Bahnen strahlen sie <em>keine</em> Energie ab.`,
+      render(svg) {
+        svg.appendChild(text(400, 50, "Bohrs Atommodell", { size: 26, weight: 700 }));
+        nucleus(svg, 400, 220, 200);
+        [40, 70, 100].forEach((r, i) => orbit(svg, 400, 220, r, r * 0.65, [ACCENT, TEAL, AMBER][i], 400 + i * 200));
+        electron(svg, 400 + 70, 220, TEAL, 1000);
+        svg.appendChild(text(400, 355, "Nur diskrete Bahnen sind erlaubt — „stationäre Zustände“", { size: 15, attrs: { fill: MUTED }, delay: 1300 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">4 / 7 · Energieniveaus</span>Jede erlaubte Bahn entspricht einer festen Energie E<sub>n</sub>. Für Wasserstoff gilt: <span class="formula-inline">E_n = −13,6 eV / n²</span>.`,
+      render(svg) {
+        svg.appendChild(text(400, 40, "Energieniveauschema", { size: 22, weight: 700 }));
+        const ys = [330, 260, 210, 175, 150, 130];
+        levelLines(svg, 250, 550, ys, 200);
+        ["n=1", "n=2", "n=3", "n=4", "n=5", "n=6"].forEach((lab, i) => {
+          svg.appendChild(text(220, ys[i] + 4, lab, { size: 12, anchor: "end", attrs: { fill: MUTED }, delay: 200 + i * 100 }));
+        });
+        svg.appendChild(text(400, 360, "höheres n → höhere (weniger negative) Energie", { size: 14, attrs: { fill: MUTED }, delay: 1000 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">5 / 7 · Quantensprung</span>Springt ein Elektron von einem höheren auf ein niedrigeres Niveau, wird die Energiedifferenz als <strong>Photon</strong> abgestrahlt: <span class="formula-inline">E_Photon = E_n − E_m = h·f</span>.`,
+      render(svg) {
+        svg.appendChild(text(400, 40, "Emission eines Photons", { size: 22, weight: 700 }));
+        const ys = [330, 260, 210, 175];
+        levelLines(svg, 150, 350, ys, 100);
+        ["n=1", "n=2", "n=3", "n=4"].forEach((lab, i) => {
+          svg.appendChild(text(130, ys[i] + 4, lab, { size: 12, anchor: "end", attrs: { fill: MUTED }, delay: 100 }));
+        });
+        electron(svg, 250, ys[3], TEAL, 600);
+        const g = svgEl("g", { "data-anim": "1", "data-delay": 900 });
+        g.appendChild(svgEl("line", { x1: 250, y1: ys[3], x2: 250, y2: ys[1] + 6, stroke: ROSE, "stroke-width": 2, "marker-end": "" }));
+        svg.appendChild(g);
+        photonWiggle(svg, 300, 260, 560, 200, "#ffd166", 1500);
+        svg.appendChild(text(560, 180, "Photon: E = h·f", { size: 15, weight: 700, attrs: { fill: "#ffd166" }, delay: 1900 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">6 / 7 · Experimentelle Bestätigung</span>Sowohl die gemessenen <strong>Spektrallinien</strong> als auch der <strong>Franck-Hertz-Versuch</strong> stimmen exakt mit den berechneten Energiedifferenzen überein.`,
+      render(svg) {
+        svg.appendChild(text(400, 60, "Zwei unabhängige Bestätigungen", { size: 22, weight: 700 }));
+        svg.appendChild(text(230, 110, "Linienspektren", { size: 16, weight: 700, attrs: { fill: ACCENT }, delay: 200 }));
+        [520, 545, 570].forEach((x0, i) => {
+          svg.appendChild(svgEl("rect", { x: 180 + i * 25, y: 140, width: 5, height: 60, fill: ["#8fd3ff", "#7CFC9A", "#ffd166"][i], "data-anim": "1", "data-delay": 500 + i * 150 }));
+        });
+
+        svg.appendChild(text(580, 110, "Franck-Hertz-Versuch", { size: 16, weight: 700, attrs: { fill: TEAL }, delay: 900 }));
+        const g = svgEl("g", { "data-anim": "1", "data-delay": 1200 });
+        let d = "M 480 220";
+        for (let i = 0; i < 4; i++) {
+          d += ` Q ${500 + i * 40} 150 ${520 + i * 40} 220 Q ${540 + i * 40} 260 ${560 + i * 40} 220`;
+        }
+        g.appendChild(svgEl("path", { d, stroke: TEAL, fill: "none", "stroke-width": 2.5 }));
+        svg.appendChild(g);
+
+        svg.appendChild(text(400, 340, "Beide Experimente liefern dieselben Energiedifferenzen ΔE.", { size: 15, attrs: { fill: MUTED }, delay: 1800 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">7 / 7 · Fazit</span>Diskrete Spektren sind kein Zufall — sie sind der direkte Fingerabdruck <strong>gequantelter Energieniveaus</strong> in der Atomhülle.`,
+      render(svg) {
+        svg.appendChild(text(400, 150, "Spektren sind Fingerabdrücke der Atome.", { size: 26, weight: 700, delay: 100 }));
+        svg.appendChild(text(400, 200, "E_n = −13,6 eV / n²", { size: 22, attrs: { fill: ACCENT, "font-family": "monospace" }, delay: 500 }));
+        svg.appendChild(text(400, 240, "E_Photon = E_n − E_m = h·f", { size: 20, attrs: { fill: TEAL, "font-family": "monospace" }, delay: 900 }));
+        nucleus(svg, 400, 320, 1300);
+        orbit(svg, 400, 320, 50, 32, AMBER, 1500);
+        electron(svg, 450, 320, AMBER, 1700);
+      }
+    },
+  ];
+
+  new ScenePlayer(qs("#player"), scenes);
+})();
+</script>
+</body>
+</html>

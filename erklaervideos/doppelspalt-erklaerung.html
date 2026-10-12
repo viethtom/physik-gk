@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interferiert ein Teilchen mit sich selbst? — Erklär-Animation — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/erklaervideos/index.html">Erklärvideos</a><span class="sep">›</span>
+    <span>Interferiert ein Teilchen mit sich selbst?</span>
+  </div>
+
+  <section class="hero" style="padding-top:24px; padding-bottom: 10px;">
+    <div class="eyebrow">Erklär-Animation · Quantenobjekte</div>
+    <h1>Interferiert ein Teilchen mit sich selbst?</h1>
+    <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+      Vom Doppelspaltexperiment mit Kugeln über Wellen bis zu einzelnen Photonen — Szene für Szene.
+    </p>
+  </section>
+
+  <div id="player"></div>
+
+  <p class="center-note">
+    Willst du das Experiment selbst durchführen? → <a href="/themen/quantenobjekte/licht-und-materie.html">Zur interaktiven Simulation</a>
+  </p>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Erklär-Animation im Stil bekannter Wissenschafts-Erklärvideos (web-nativ, ohne Videodatei)</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script>
+(function () {
+  const ACCENT = "var(--accent)", TEAL = "var(--teal)", AMBER = "var(--amber)", ROSE = "var(--rose)", TEXT = "var(--text)", MUTED = "var(--text-muted)";
+
+  function text(x, y, str, opts = {}) {
+    const t = svgEl("text", Object.assign({
+      x, y, fill: TEXT, "font-family": "system-ui,sans-serif",
+      "font-size": opts.size || 20, "font-weight": opts.weight || 400,
+      "text-anchor": opts.anchor || "middle", "data-anim": "1"
+    }, opts.attrs || {}));
+    t.textContent = str;
+    if (opts.delay) t.setAttribute("data-delay", opts.delay);
+    return t;
+  }
+
+  function barrier(svg, x, gapY1, gapY2, gapY3, gapY4, top, bottom, delay) {
+    const g = svgEl("g", { "data-anim": "1", "data-delay": delay || 0 });
+    g.appendChild(svgEl("line", { x1: x, y1: top, x2: x, y2: gapY1, stroke: "#565d73", "stroke-width": 6 }));
+    g.appendChild(svgEl("line", { x1: x, y1: gapY2, x2: x, y2: gapY3, stroke: "#565d73", "stroke-width": 6 }));
+    g.appendChild(svgEl("line", { x1: x, y1: gapY4, x2: x, y2: bottom, stroke: "#565d73", "stroke-width": 6 }));
+    svg.appendChild(g);
+  }
+
+  function screenBand(svg, x, top, bottom, delay) {
+    svg.appendChild(svgEl("line", { x1: x, y1: top, x2: x, y2: bottom, stroke: "#3a3f52", "stroke-width": 3, "data-anim": "1", "data-delay": delay || 0 }));
+  }
+
+  const scenes = [
+    {
+      caption: `<span class="scene-title-badge">1 / 7 · Kugeln durch zwei Löcher</span>Schießt man kleine Kugeln durch zwei Löcher, erwartet man auf dem Schirm <strong>zwei Häufungen</strong> — direkt hinter jedem Loch.`,
+      render(svg) {
+        svg.appendChild(text(400, 50, "Klassische Teilchen (Kugeln)", { size: 22, weight: 700 }));
+        barrier(svg, 380, 130, 160, 240, 270, 100, 350, 200);
+        screenBand(svg, 620, 100, 350, 300);
+        for (let i = 0; i < 6; i++) {
+          svg.appendChild(svgEl("circle", { cx: 620, cy: 145 + Math.random() * 10, r: 3, fill: ACCENT, "data-anim": "1", "data-delay": 600 + i * 60 }));
+          svg.appendChild(svgEl("circle", { cx: 620, cy: 255 + Math.random() * 10, r: 3, fill: ACCENT, "data-anim": "1", "data-delay": 700 + i * 60 }));
+        }
+        svg.appendChild(text(680, 150, "zwei Häufungen", { size: 13, anchor: "start", attrs: { fill: MUTED }, delay: 1200 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">2 / 7 · Wellen durch zwei Spalte</span>Wasserwellen durch zwei Öffnungen erzeugen dagegen ein <strong>Streifenmuster</strong> — Interferenz aus konstruktiver und destruktiver Überlagerung.`,
+      render(svg) {
+        svg.appendChild(text(400, 50, "Wellen (z. B. Wasserwellen)", { size: 22, weight: 700 }));
+        barrier(svg, 380, 130, 160, 240, 270, 100, 350, 200);
+        // Kreiswellen von den Spalten
+        [160, 255].forEach((yy, gi) => {
+          for (let i = 1; i <= 4; i++) {
+            svg.appendChild(svgEl("circle", {
+              cx: 380, cy: yy, r: i * 28, fill: "none", stroke: ACCENT, "stroke-width": 1.4, opacity: 0.55,
+              "data-anim": "1", "data-delay": 300 + gi * 150 + i * 120
+            }));
+          }
+        });
+        screenBand(svg, 640, 100, 350, 1200);
+        for (let i = 0; i < 7; i++) {
+          const y = 110 + i * 34;
+          const bright = (i % 2 === 0);
+          svg.appendChild(svgEl("rect", {
+            x: 634, y: y - 8, width: 14, height: 16, fill: bright ? ACCENT : "transparent",
+            opacity: bright ? 0.8 : 0, "data-anim": "1", "data-delay": 1400 + i * 60
+          }));
+        }
+        svg.appendChild(text(700, 130, "Streifenmuster", { size: 13, anchor: "start", attrs: { fill: MUTED }, delay: 1900 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">3 / 7 · Und Licht?</span>Führt man den Doppelspaltversuch mit Licht durch, entsteht ebenfalls ein Interferenzmuster. Licht verhält sich hier <strong>wie eine Welle.</strong>`,
+      render(svg) {
+        svg.appendChild(text(400, 60, "Licht am Doppelspalt", { size: 24, weight: 700 }));
+        barrier(svg, 380, 170, 200, 240, 270, 130, 340, 200);
+        screenBand(svg, 640, 130, 340, 500);
+        for (let i = 0; i < 6; i++) {
+          const y = 145 + i * 33;
+          const bright = (i % 2 === 0);
+          svg.appendChild(svgEl("rect", {
+            x: 634, y: y - 8, width: 14, height: 16, fill: "#ffe27a",
+            opacity: bright ? 0.85 : 0.15, "data-anim": "1", "data-delay": 700 + i * 90
+          }));
+        }
+        svg.appendChild(text(400, 380, "Interferenzmuster → Wellencharakter des Lichts", { size: 15, attrs: { fill: MUTED }, delay: 1400 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">4 / 7 · Jetzt einzeln</span>Was passiert, wenn man <strong>ein einzelnes Photon nach dem anderen</strong> abschießt — so schwach, dass nie zwei gleichzeitig unterwegs sind?`,
+      render(svg) {
+        svg.appendChild(text(400, 60, "Ein Photon nach dem anderen", { size: 22, weight: 700 }));
+        barrier(svg, 380, 170, 200, 240, 270, 130, 340, 200);
+        screenBand(svg, 640, 130, 340, 400);
+        svg.appendChild(svgEl("circle", { cx: 200, cy: 250, r: 5, fill: "#ffe27a", "data-anim": "1", "data-delay": 700 }));
+        svg.appendChild(svgEl("circle", { cx: 640, cy: 210, r: 2.2, fill: "#ffe27a", "data-anim": "1", "data-delay": 1300 }));
+        svg.appendChild(text(400, 380, "Jedes Photon landet als einzelner Punkt — wie ein Teilchen.", { size: 15, attrs: { fill: MUTED }, delay: 1700 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">5 / 7 · Nach vielen Ereignissen</span>Wartet man lange genug, entsteht aus den einzelnen Punkten <strong>trotzdem</strong> das Interferenzmuster — obwohl nie zwei Photonen gleichzeitig unterwegs waren!`,
+      render(svg) {
+        svg.appendChild(text(400, 50, "Nach vielen Einzelereignissen", { size: 22, weight: 700 }));
+        barrier(svg, 380, 170, 200, 240, 270, 130, 340, 200);
+        screenBand(svg, 640, 130, 340, 300);
+        const bands = [0.9, 0.15, 0.7, 0.1, 0.55, 0.08, 0.35];
+        let dotDelay = 500;
+        bands.forEach((density, bi) => {
+          const yc = 145 + bi * 30;
+          const n = Math.round(density * 14);
+          for (let i = 0; i < n; i++) {
+            svg.appendChild(svgEl("circle", {
+              cx: 634 + Math.random() * 12, cy: yc + (Math.random() - 0.5) * 22, r: 1.6, fill: "#ffe27a",
+              "data-anim": "1", "data-delay": dotDelay
+            }));
+            dotDelay += 15;
+          }
+        });
+        svg.appendChild(text(400, 380, "Das Muster ist eine Wahrscheinlichkeitsverteilung.", { size: 15, weight: 700, attrs: { fill: ACCENT }, delay: dotDelay + 200 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">6 / 7 · Die Deutung</span>Solange niemand misst, „durch welchen Spalt“ das Photon fliegt, muss man <strong>beide Möglichkeiten gleichzeitig</strong> berücksichtigen — Superposition. Erst der Nachweis legt den Ort fest.`,
+      render(svg) {
+        svg.appendChild(text(400, 70, "Superposition & Kopenhagener Deutung", { size: 22, weight: 700 }));
+        svg.appendChild(svgEl("circle", { cx: 300, cy: 220, r: 44, fill: "none", stroke: ACCENT, "stroke-width": 2.4, "stroke-dasharray": "5 4", "data-anim": "1", "data-delay": 300 }));
+        svg.appendChild(text(300, 226, "Spalt A", { size: 14, attrs: { fill: ACCENT }, delay: 500 }));
+        svg.appendChild(svgEl("circle", { cx: 500, cy: 220, r: 44, fill: "none", stroke: TEAL, "stroke-width": 2.4, "stroke-dasharray": "5 4", "data-anim": "1", "data-delay": 700 }));
+        svg.appendChild(text(500, 226, "Spalt B", { size: 14, attrs: { fill: TEAL }, delay: 900 }));
+        svg.appendChild(text(400, 310, "+", { size: 30, weight: 700, delay: 1100 }));
+        svg.appendChild(text(400, 360, "Erst die Messung „entscheidet“ den Ort.", { size: 16, attrs: { fill: MUTED }, delay: 1500 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">7 / 7 · Fazit</span>Licht (und auch Elektronen) sind weder klassische Wellen noch klassische Teilchen. Das ist der <strong>Welle-Teilchen-Dualismus</strong> der Quantenobjekte.`,
+      render(svg) {
+        svg.appendChild(text(400, 150, "Welle-Teilchen-Dualismus", { size: 30, weight: 700, delay: 100 }));
+        svg.appendChild(text(400, 210, "Nachweis: immer als einzelnes Ereignis (Teilchen)", { size: 17, attrs: { fill: TEAL }, delay: 500 }));
+        svg.appendChild(text(400, 245, "Verteilung vieler Ereignisse: wellenartig", { size: 17, attrs: { fill: ACCENT }, delay: 800 }));
+        svg.appendChild(text(400, 320, "Beide Modelle beschreiben nur je einen Aspekt derselben Realität.", { size: 15, attrs: { fill: MUTED }, delay: 1200 }));
+      }
+    },
+  ];
+
+  new ScenePlayer(qs("#player"), scenes);
+})();
+</script>
+</body>
+</html>

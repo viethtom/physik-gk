@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fadenstrahlrohr — Quantenobjekte — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <span>Fadenstrahlrohr</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Erforschung des Elektrons</div>
+    <div class="leitfrage">Wie können physikalische Eigenschaften wie die Ladung und die Masse eines Elektrons gemessen werden?</div>
+    <div class="schwerpunkte">e/m-Bestimmung · Fadenstrahlrohr · Helmholtzspulenpaar</div>
+  </div>
+
+  <h1>Fadenstrahlrohr: die spezifische Ladung e/m</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    Elektronen werden mit der Spannung <em>U</em> beschleunigt und laufen im homogenen Magnetfeld eines
+    Helmholtzspulenpaares (Strom <em>I</em>) auf einer Kreisbahn. Miss den Bahnradius <em>r</em> für mehrere
+    Beschleunigungsspannungen bei <strong>konstantem</strong> Spulenstrom.
+  </p>
+
+  <div class="sim-layout">
+    <div class="panel">
+      <h3>Spannung &amp; Spulenstrom einstellen</h3>
+
+      <div class="control">
+        <label>Spulenstrom I <span class="val" id="iVal">2,0 A</span></label>
+        <input type="range" id="iSlider" min="1.0" max="4.0" value="2.0" step="0.1">
+        <div class="hint">Für eine Messreihe konstant halten!</div>
+      </div>
+
+      <div class="control">
+        <label>Beschleunigungsspannung U <span class="val" id="uVal">200 V</span></label>
+        <input type="range" id="uSlider" min="100" max="350" value="200" step="5">
+      </div>
+
+      <div class="readout"><span class="k">Magnetfeld B (aus I)</span><span class="v" id="bReadout">–</span></div>
+      <div class="readout"><span class="k">Bahnradius r (Lineal)</span><span class="v" id="rReadout">–</span></div>
+      <div class="readout"><span class="k">Windungszahl N / Spulenradius R</span><span class="v">130 / 0,15 m</span></div>
+
+      <div class="control-row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="btnMessen">📏 r messen</button>
+        <button class="btn btn-secondary" id="btnReset">Tabelle leeren</button>
+      </div>
+      <div class="info-note">e/m der Kathode ist unbekannt — du bestimmst sie aus der Steigung von r² über U.</div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <canvas id="stage" width="640" height="320"></canvas>
+        <div class="stage-caption">Kreisbahn der Elektronen im Magnetfeld — Lineal in cm.</div>
+      </div>
+
+      <div class="data-panel">
+        <h3>Messwerttabelle (bei konstantem I)</h3>
+        <div id="tableHost"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:var(--accent)"></span>r² über U</span>
+          <span><span class="dot" style="background:var(--teal)"></span>Ausgleichsgerade</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">r² = (2m/e) · U / B²  &nbsp;&nbsp;⟹&nbsp;&nbsp; e/m = 2 / (Steigung · B²)</div>
+    <p>Bei konstantem Spulenstrom I (also konstantem B) ist r² proportional zu U. Aus der Steigung der
+    Ausgleichsgeraden im r²-U-Diagramm lässt sich die spezifische Ladung e/m berechnen.</p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Quantenobjekte · Erforschung des Elektrons</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/chart.js"></script>
+<script>
+(function () {
+  const N = 130, R_coil = 0.15;
+  const bulbRadius_m = 0.09;
+
+  function B_of_I(I) {
+    return Math.pow(4 / 5, 1.5) * PHYS.mu0 * N * I / R_coil;
+  }
+  function r_of(U, I) {
+    const B = B_of_I(I);
+    const val = 2 * U * PHYS.me / PHYS.e;
+    return Math.sqrt(val) / B;
+  }
+
+  const canvas = qs("#stage");
+  const ctx = canvas.getContext("2d");
+
+  function currentUI() {
+    return {
+      I: Number(qs("#iSlider").value),
+      U: Number(qs("#uSlider").value)
+    };
+  }
+
+  function updateReadouts() {
+    const { I, U } = currentUI();
+    qs("#iVal").textContent = `${fmt(I, 1)} A`;
+    qs("#uVal").textContent = `${fmt(U, 0)} V`;
+    const B = B_of_I(I);
+    qs("#bReadout").textContent = `${fmtSci(B, 3)} T`;
+    const r = r_of(U, I);
+    qs("#rReadout").textContent = `${fmt(r * 100, 2)} cm`;
+  }
+
+  qs("#iSlider").addEventListener("input", updateReadouts);
+  qs("#uSlider").addEventListener("input", updateReadouts);
+
+  function resizeCanvasForCSS() {
+    const cssW = canvas.parentElement.clientWidth - 32;
+    const cssH = 300;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssW, h: cssH };
+  }
+
+  function draw() {
+    const { w, h } = resizeCanvasForCSS();
+    ctx.fillStyle = "#08090d";
+    ctx.fillRect(0, 0, w, h);
+
+    const cx = w / 2, cy = h / 2;
+    const bulbPx = Math.min(w, h) / 2 - 30;
+    const scale = bulbPx / bulbRadius_m; // px per m
+
+    // Bulb
+    ctx.strokeStyle = "#3a3f52";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, bulbPx, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Lineal (horizontal, in cm)
+    ctx.strokeStyle = "#565d73";
+    ctx.fillStyle = "#9aa1b1";
+    ctx.font = "10px system-ui";
+    ctx.textAlign = "center";
+    for (let cm = -8; cm <= 8; cm++) {
+      const x = cx + (cm / 100) * scale;
+      if (Math.abs(x - cx) > bulbPx) continue;
+      const tick = cm % 2 === 0 ? 8 : 4;
+      ctx.beginPath();
+      ctx.moveTo(x, cy + bulbPx + 4);
+      ctx.lineTo(x, cy + bulbPx + 4 + tick);
+      ctx.stroke();
+      if (cm % 2 === 0) ctx.fillText(String(cm), x, cy + bulbPx + 26);
+    }
+
+    const { I, U } = currentUI();
+    const r_m = r_of(U, I);
+    const r_px = Math.min(r_m * scale, bulbPx - 4);
+
+    // Kreisbahn (glühender Ring)
+    ctx.strokeStyle = "#7CFC9A";
+    ctx.shadowColor = "#7CFC9A";
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r_px, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Elektronenkanone am unteren Rand der Bahn
+    const gunY = cy + r_px;
+    ctx.fillStyle = "#e8eaf2";
+    ctx.beginPath();
+    ctx.arc(cx, gunY, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#c7cbe0";
+    ctx.font = "12px system-ui";
+    ctx.fillText("cm", cx + bulbPx + 4, cy + bulbPx + 26);
+
+    requestAnimationFrame(draw);
+  }
+
+  qs("#btnMessen").addEventListener("click", () => {
+    const { I, U } = currentUI();
+    const trueR = r_of(U, I);
+    const noisyR = trueR * (1 + (Math.random() - 0.5) * 0.03);
+    table.addRow({ I, U, r: noisyR * 100, r2: (noisyR * 100) * (noisyR * 100) });
+  });
+  qs("#btnReset").addEventListener("click", () => table.clear());
+
+  const table = new DataTable(qs("#tableHost"), [
+    { key: "I", label: "I", unit: "A", decimals: 1 },
+    { key: "U", label: "U", unit: "V", decimals: 0 },
+    { key: "r", label: "r", unit: "cm", decimals: 2 },
+    { key: "r2", label: "r²", unit: "cm²", decimals: 1 },
+  ], {
+    onChange: rows => chart.setPoints(rows.map(r => ({ x: r.U, y: r.r2 })))
+  });
+
+  const chart = new ScatterChart(qs("#chart"), {
+    xLabel: "U", yLabel: "r²", xUnit: "V", yUnit: "cm²",
+    showRegression: true, minPointsForFit: 2
+  });
+
+  updateReadouts();
+  draw();
+
+  new StepGuide(qs("#stepguide"), {
+    title: "Geführte Auswertung: e/m aus r²(U) bei konstantem I",
+    intro: "Stelle zuerst einen Spulenstrom I ein und ändere ihn während der ganzen Messreihe nicht mehr. Miss dann r für mindestens 5 verschiedene U-Werte.",
+    steps: [
+      {
+        title: "Beobachtung",
+        body: "<p>Verändere zunächst U bei festem I, dann I bei festem U. Wie reagiert der Bahnradius jeweils?</p>",
+        note: true,
+        notePlaceholder: "Deine Beobachtung…",
+      },
+      {
+        title: "Messreihe (I konstant halten!)",
+        body: "<p>Wähle ein I (z. B. 2,0 A) und notiere es dir. Miss dann r für 5 Werte von U zwischen 100 V und 350 V.</p>",
+        hint: "<p>Wenn du I während der Messreihe änderst, ist B nicht mehr konstant und die Auswertung stimmt nicht mehr.</p>",
+      },
+      {
+        title: "Diagramm deuten",
+        body: "<p>Das Diagramm zeigt r² über U. Warum wird hier r² statt r aufgetragen?</p>",
+        note: true,
+        notePlaceholder: "Deine Deutung…",
+        reveal: "<p>Aus r² = (2m/e)·U/B² folgt: r² ist proportional zu U (bei festem B). Eine Auftragung von r über U wäre eine Wurzelfunktion — r² über U ergibt dagegen eine <strong>Gerade</strong>, die sich leicht auswerten lässt.</p>",
+      },
+      {
+        title: "e/m berechnen",
+        body: "<p>Lies die Steigung m<sub>Fit</sub> = r²/U ab. Berechne zunächst B für dein gewähltes I (siehe Anzeige „Magnetfeld B“). Damit gilt: e/m = 2 / (m<sub>Fit</sub> · B²) — achte auf die Einheiten (r in Metern!).</p>",
+        reveal: `<p>Literaturwert: e/m ≈ ${fmtSci(PHYS.e / PHYS.me, 3)} C/kg. Wie nah kommt deine Messreihe heran?</p>`,
+        revealLabel: "Vergleichswert",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>

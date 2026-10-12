@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beugung und Interferenz — Quantenobjekte — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <span>Beugung und Interferenz</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Erforschung des Photons</div>
+    <div class="leitfrage">Wie kann das Verhalten von Licht beschrieben und erklärt werden?</div>
+    <div class="schwerpunkte">Doppelspalt, Gitter, Wellenwanne · Huygens’sches Prinzip</div>
+  </div>
+
+  <h1>Beugung und Interferenz</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    Laserlicht fällt auf einen Doppelspalt bzw. ein Gitter mit Spaltabstand <em>d</em> und erzeugt auf einem
+    Schirm im Abstand <em>L</em> ein Muster heller und dunkler Streifen. Finde heraus, wie der Streifenabstand
+    <em>Δx</em> vom Spaltabstand <em>d</em> abhängt — und bestimme daraus die Wellenlänge des Lasers.
+  </p>
+
+  <div class="sim-layout">
+    <div class="panel">
+      <h3>Aufbau einstellen</h3>
+
+      <div class="control">
+        <label>Laserfarbe</label>
+        <div class="pill-row" id="colorButtons"></div>
+        <div class="hint" id="lambdaReadout"></div>
+      </div>
+
+      <div class="control">
+        <label>Spaltabstand d <span class="val" id="dVal">150 µm</span></label>
+        <input type="range" id="dSlider" min="50" max="300" value="150" step="5">
+        <div class="hint">Größerer Spaltabstand → engere Spalte im Muster.</div>
+      </div>
+
+      <div class="control">
+        <label>Anzahl Spalte (Doppelspalt → Gitter) <span class="val" id="nVal">2</span></label>
+        <input type="range" id="nSlider" min="2" max="10" value="2" step="1">
+        <div class="hint">Nur zur Veranschaulichung: mehr Spalte → schärfere Maxima, gleicher Abstand Δx.</div>
+      </div>
+
+      <div class="readout"><span class="k">Schirmabstand L</span><span class="v">2,50 m</span></div>
+
+      <div class="control-row">
+        <button class="btn btn-secondary btn-sm" id="btnWellenwanne">🌊 Wellenwanne</button>
+      </div>
+
+      <div class="control-row" style="margin-top:18px;">
+        <button class="btn btn-primary" id="btnMessen">📏 Δx messen</button>
+        <button class="btn btn-secondary" id="btnReset">Tabelle leeren</button>
+      </div>
+      <div class="info-note">Die Simulation liest den Streifenabstand am virtuellen Lineal ab (mit kleiner Messungenauigkeit, wie beim echten Ablesen).</div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <canvas id="stage" width="640" height="360"></canvas>
+        <div class="stage-caption" id="stageCaption">Interferenzmuster auf dem Schirm — Lineal in mm darunter.</div>
+      </div>
+
+      <div class="data-panel">
+        <h3>Messwerttabelle</h3>
+        <div id="tableHost"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:var(--accent)"></span>Messpunkte (Δx über 1/d)</span>
+          <span><span class="dot" style="background:var(--teal)"></span>Ausgleichsgerade</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">d · Δx = λ · L &nbsp;&nbsp;⟺&nbsp;&nbsp; Δx = λL · (1/d)</div>
+    <p>Der Streifenabstand Δx ist proportional zu 1/d. Die Steigung der Ausgleichsgeraden im Δx-(1/d)-Diagramm entspricht λ·L — bei bekanntem L lässt sich daraus die Wellenlänge λ des Lasers bestimmen.</p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Quantenobjekte · Erforschung des Photons</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/chart.js"></script>
+<script>
+(function () {
+  const L_M = 2.50;
+  const COLORS = [
+    { name: "Violett", nm: 405 },
+    { name: "Blau", nm: 450 },
+    { name: "Grün", nm: 532 },
+    { name: "Rot", nm: 650 },
+  ];
+  let lambdaNm = 650;
+  let d_um = 150;
+  let nSlits = 2;
+  let mode = "pattern"; // 'pattern' | 'wellenwanne'
+  let rafId = null;
+  let waveT = 0;
+
+  const canvas = qs("#stage");
+  const ctx = canvas.getContext("2d");
+
+  function setupColorButtons() {
+    const host = qs("#colorButtons");
+    COLORS.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "pill";
+      btn.style.cursor = "pointer";
+      btn.style.borderColor = wavelengthToRGB(c.nm);
+      btn.textContent = c.name;
+      btn.dataset.nm = c.nm;
+      btn.addEventListener("click", () => {
+        lambdaNm = c.nm;
+        updateActiveColor();
+        render();
+      });
+      host.appendChild(btn);
+    });
+    updateActiveColor();
+  }
+  function updateActiveColor() {
+    qsa("#colorButtons .pill").forEach(b => {
+      const active = Number(b.dataset.nm) === lambdaNm;
+      b.style.background = active ? wavelengthToRGB(lambdaNm) : "";
+      b.style.color = active ? "#fff" : "";
+      b.style.fontWeight = active ? "700" : "400";
+    });
+    qs("#lambdaReadout").textContent = `λ = ${lambdaNm} nm (nicht verraten – das sollst du bestimmen)`;
+  }
+
+  function deltaX_mm(lambda_nm, d_um) {
+    const lambda_m = lambda_nm * 1e-9;
+    const d_m = d_um * 1e-6;
+    return (lambda_m * L_M / d_m) * 1000; // mm
+  }
+
+  function resizeCanvasForCSS() {
+    const cssW = canvas.parentElement.clientWidth - 32;
+    const cssH = mode === "wellenwanne" ? 300 : 300;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssW, h: cssH };
+  }
+
+  function drawPattern() {
+    const { w, h } = resizeCanvasForCSS();
+    const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg-sunken").trim() || "#111";
+    ctx.fillStyle = "#0a0a0f";
+    ctx.fillRect(0, 0, w, h);
+
+    const dxmm = deltaX_mm(lambdaNm, d_um);
+    const halfWidthMM = dxmm * 3.6;
+    const scale = (w - 40) / (2 * halfWidthMM); // px per mm
+    const cx = w / 2;
+
+    const bandTop = 20, bandH = 130;
+    const profTop = bandTop + bandH + 26, profH = 90;
+
+    const rgb = wavelengthToRGB(lambdaNm);
+
+    // photographic band
+    for (let px = 20; px < w - 20; px++) {
+      const xmm = (px - cx) / scale;
+      const delta = (2 * Math.PI * (d_um * 1e-6) / (lambdaNm * 1e-9)) * (xmm / 1000 / L_M);
+      let intensity;
+      if (Math.abs(Math.sin(delta / 2)) < 1e-6) intensity = 1;
+      else intensity = Math.pow(Math.sin(nSlits * delta / 2) / (nSlits * Math.sin(delta / 2)), 2);
+      const envelope = Math.exp(-Math.pow(xmm / (halfWidthMM * 0.85), 2) * 1.1);
+      intensity *= envelope;
+      ctx.fillStyle = rgb;
+      ctx.globalAlpha = Math.max(0, Math.min(1, intensity));
+      ctx.fillRect(px, bandTop, 1, bandH);
+    }
+    ctx.globalAlpha = 1;
+
+    // intensity profile curve
+    ctx.strokeStyle = rgb;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let px = 20; px < w - 20; px++) {
+      const xmm = (px - cx) / scale;
+      const delta = (2 * Math.PI * (d_um * 1e-6) / (lambdaNm * 1e-9)) * (xmm / 1000 / L_M);
+      let intensity;
+      if (Math.abs(Math.sin(delta / 2)) < 1e-6) intensity = 1;
+      else intensity = Math.pow(Math.sin(nSlits * delta / 2) / (nSlits * Math.sin(delta / 2)), 2);
+      const envelope = Math.exp(-Math.pow(xmm / (halfWidthMM * 0.85), 2) * 1.1);
+      intensity *= envelope;
+      const y = profTop + profH - intensity * profH;
+      if (px === 20) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+    }
+    ctx.stroke();
+
+    // ruler
+    const rulerY = profTop + profH + 20;
+    ctx.strokeStyle = "#8a91a3";
+    ctx.fillStyle = "#c7cbe0";
+    ctx.font = "11px system-ui";
+    ctx.textAlign = "center";
+    ctx.beginPath();
+    ctx.moveTo(20, rulerY); ctx.lineTo(w - 20, rulerY); ctx.stroke();
+    const step = niceRulerStep(halfWidthMM);
+    for (let v = -Math.floor(halfWidthMM / step) * step; v <= halfWidthMM; v += step) {
+      const px = cx + v * scale;
+      if (px < 20 || px > w - 20) continue;
+      ctx.beginPath();
+      ctx.moveTo(px, rulerY - 5); ctx.lineTo(px, rulerY + 5); ctx.stroke();
+      ctx.fillText(v.toFixed(step < 1 ? 1 : 0), px, rulerY + 18);
+    }
+    ctx.textAlign = "left";
+    ctx.fillText("mm", w - 34, rulerY + 18);
+
+    qs("#stageCaption").textContent = `Interferenzmuster auf dem Schirm (L = 2,50 m) — Lineal in mm darunter.`;
+  }
+
+  function niceRulerStep(halfWidthMM) {
+    const target = halfWidthMM / 5;
+    const pow10 = Math.pow(10, Math.floor(Math.log10(target)));
+    const n = target / pow10;
+    let step = n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10;
+    return step * pow10;
+  }
+
+  function drawWellenwanne(ts) {
+    const { w, h } = resizeCanvasForCSS();
+    ctx.fillStyle = "#06070c";
+    ctx.fillRect(0, 0, w, h);
+
+    const sourceY = 34;
+    const spacing = Math.min(90, 24 + d_um / 4);
+    const sources = [];
+    for (let i = 0; i < nSlits; i++) {
+      const off = (i - (nSlits - 1) / 2) * spacing;
+      sources.push({ x: w / 2 + off, y: sourceY });
+    }
+    const k = 0.28; // rad/px, rein visuell
+    const speed = 0.12;
+    waveT += speed;
+
+    const imgData = ctx.createImageData(w, h);
+    const step = 3;
+    for (let py = sourceY; py < h - 10; py += step) {
+      for (let px = 10; px < w - 10; px += step) {
+        let sum = 0;
+        for (const s of sources) {
+          const dist = Math.hypot(px - s.x, py - s.y);
+          sum += Math.cos(k * dist - waveT * 6);
+        }
+        const val = sum / sources.length;
+        const bright = Math.max(0, val);
+        const rgb = wavelengthToRGB(lambdaNm);
+        const m = rgb.match(/\d+/g).map(Number);
+        for (let yy = 0; yy < step; yy++) {
+          for (let xx = 0; xx < step; xx++) {
+            const idx = ((py + yy) * w + (px + xx)) * 4;
+            if (idx < 0 || idx > imgData.data.length - 4) continue;
+            imgData.data[idx] = m[0] * bright;
+            imgData.data[idx + 1] = m[1] * bright;
+            imgData.data[idx + 2] = m[2] * bright;
+            imgData.data[idx + 3] = 255;
+          }
+        }
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    ctx.fillStyle = "#fff";
+    sources.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, 3, 0, Math.PI * 2); ctx.fill(); });
+
+    qs("#stageCaption").textContent = "Wellenwannen-Ansicht: Kreiswellen von jedem Spalt überlagern sich (Huygens’sches Prinzip). Helle Linien = konstruktive Interferenz.";
+    rafId = requestAnimationFrame(drawWellenwanne);
+  }
+
+  function render() {
+    qs("#dVal").textContent = `${d_um} µm`;
+    qs("#nVal").textContent = nSlits;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (mode === "pattern") drawPattern();
+    else drawWellenwanne();
+  }
+
+  qs("#dSlider").addEventListener("input", e => { d_um = Number(e.target.value); render(); });
+  qs("#nSlider").addEventListener("input", e => { nSlits = Number(e.target.value); render(); });
+  qs("#btnWellenwanne").addEventListener("click", () => {
+    mode = mode === "pattern" ? "wellenwanne" : "pattern";
+    qs("#btnWellenwanne").textContent = mode === "pattern" ? "🌊 Wellenwanne" : "🎯 Zum Schirmbild";
+    render();
+  });
+  window.addEventListener("resize", () => render());
+
+  // Table + chart
+  const table = new DataTable(qs("#tableHost"), [
+    { key: "d", label: "d", unit: "µm", decimals: 0 },
+    { key: "dxMeasured", label: "Δx (gemessen)", unit: "mm", decimals: 2 },
+    { key: "invD", label: "1/d", unit: "1/mm", decimals: 4 },
+  ], {
+    onChange: rows => {
+      chart.setPoints(rows.map(r => ({ x: r.invD, y: r.dxMeasured })));
+    }
+  });
+
+  const chart = new ScatterChart(qs("#chart"), {
+    xLabel: "1/d", yLabel: "Δx", xUnit: "1/mm", yUnit: "mm",
+    showRegression: true, minPointsForFit: 2
+  });
+
+  qs("#btnMessen").addEventListener("click", () => {
+    const trueDx = deltaX_mm(lambdaNm, d_um);
+    const noisy = trueDx * (1 + (Math.random() - 0.5) * 0.05);
+    table.addRow({
+      d: d_um,
+      dxMeasured: noisy,
+      invD: 1 / d_um * 1000 // 1/mm  (d in µm -> mm: d_mm = d_um/1000, 1/d_mm = 1000/d_um)
+    });
+  });
+  qs("#btnReset").addEventListener("click", () => table.clear());
+
+  setupColorButtons();
+  render();
+
+  // StepGuide
+  new StepGuide(qs("#stepguide"), {
+    title: "Geführte Auswertung: Von Δx zur Wellenlänge",
+    intro: "Bearbeite die Schritte der Reihe nach. Miss dafür mindestens 4–5 Wertepaare bei unterschiedlichem Spaltabstand d (gleiche Laserfarbe beibehalten!).",
+    steps: [
+      {
+        title: "Beobachtung",
+        body: "<p>Verändere den Spaltabstand d mit dem Regler und beobachte das Muster. Was passiert mit dem Streifenabstand Δx, wenn d größer wird?</p>",
+        note: true,
+        notePlaceholder: "Deine Beobachtung…",
+      },
+      {
+        title: "Messreihe aufnehmen",
+        body: "<p>Wähle eine Laserfarbe und miss Δx für mindestens 5 verschiedene Werte von d (z. B. 50, 100, 150, 200, 250 µm). Klicke danach auf „Δx messen“.</p>",
+        hint: "<p>Die Farbe während der ganzen Messreihe nicht wechseln — sonst änderst du zwei Größen gleichzeitig!</p>",
+      },
+      {
+        title: "Diagramm deuten",
+        body: "<p>Das Diagramm zeigt Δx über 1/d. Warum wurde hier 1/d und nicht d auf die x-Achse gelegt? Was fällt an der Punktewolke auf?</p>",
+        note: true,
+        notePlaceholder: "Deine Deutung…",
+        reveal: "<p>Δx ist zu 1/d proportional (Δx = λL · 1/d). Deshalb ergibt die Auftragung über 1/d eine <strong>Ursprungsgerade</strong> — das lässt sich per Ausgleichsgerade auswerten.</p>",
+      },
+      {
+        title: "Steigung bestimmen",
+        body: "<p>Lies die Steigung <em>m</em> der Ausgleichsgeraden aus dem Diagramm ab (m = Δx / (1/d), in mm·mm = mm²).</p>",
+        note: true,
+        notePlaceholder: "Meine abgelesene Steigung m ≈ … mm²",
+      },
+      {
+        title: "Wellenlänge berechnen",
+        body: "<p>Da Δx = λ·L·(1/d) gilt, entspricht die Steigung m (in mm²) genau λ·L. Rechne dazu L in Millimeter um (L = 2500 mm) und berechne λ = m / L — das Ergebnis ist dann direkt in mm.</p>",
+        reveal: `<p>Mit m = λ·L folgt λ = m / L(mm) = m / 2500 mm. Das Ergebnis in mm mit 10⁶ multiplizieren, um es in Nanometer zu erhalten (1 mm = 10⁶ nm). Vergleiche das Ergebnis mit den bekannten Wellenlängenbereichen sichtbaren Lichts (violett ≈ 400 nm bis rot ≈ 700 nm). Passt dein Ergebnis zur gewählten Laserfarbe?</p>`,
+        revealLabel: "Musterlösung",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>

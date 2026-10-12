@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radioaktiver Zerfall — Strahlung und Materie — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <a href="/themen/strahlung-materie/index.html">Strahlung und Materie</a><span class="sep">›</span>
+    <span>Radioaktiver Zerfall</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Mensch und Strahlung</div>
+    <div class="leitfrage">Wie wirkt Strahlung auf den Menschen?</div>
+    <div class="schwerpunkte">Elementumwandlung · Detektoren · Halbwertszeit</div>
+  </div>
+
+  <h1>Radioaktiver Zerfall und Halbwertszeit</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    Jeder einzelne Kern zerfällt zu einem völlig zufälligen Zeitpunkt — trotzdem folgt die Zählrate vieler
+    Kerne einem exakten Gesetz. Miss mit einem simulierten Geiger-Müller-Zählrohr die Zählrate einer
+    zerfallenden Quelle zu verschiedenen Zeiten und bestimme die Halbwertszeit.
+  </p>
+
+  <div class="sim-layout">
+    <div class="panel">
+      <h3>Messzeitpunkt einstellen</h3>
+
+      <div class="control">
+        <label>Zeit seit Start t <span class="val" id="tVal">0 s</span></label>
+        <input type="range" id="tSlider" min="0" max="600" value="0" step="5">
+        <div class="hint">Zähldauer je Messung: Δt = 10 s (fest).</div>
+      </div>
+
+      <div class="readout"><span class="k">Noch aktive Kerne (Anzeige)</span><span class="v" id="activeReadout">–</span></div>
+
+      <div class="control-row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="btnMessen">☢️ Zählung starten (Δt=10s)</button>
+        <button class="btn btn-secondary" id="btnReset">Tabelle leeren</button>
+      </div>
+      <div class="control-row">
+        <button class="btn btn-secondary" id="btnNewSource">🔄 Neue Quelle</button>
+      </div>
+      <div class="info-note">Die Halbwertszeit dieser Quelle ist unbekannt — du bestimmst sie aus der Messreihe.</div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <canvas id="stage" width="640" height="280"></canvas>
+        <div class="stage-caption">Jeder Punkt ist ein Kern: hell = noch nicht zerfallen, dunkel = bereits zerfallen.</div>
+      </div>
+
+      <div class="data-panel">
+        <h3>Messwerttabelle</h3>
+        <div id="tableHost"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:var(--accent)"></span>ln(Zählrate) über t</span>
+          <span><span class="dot" style="background:var(--teal)"></span>Ausgleichsgerade</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">ln(A(t)) = ln(A₀) − λ·t &nbsp;&nbsp;mit&nbsp;&nbsp; T<sub>H</sub> = ln2 / λ</div>
+    <p>Das Zerfallsgesetz A(t) = A₀·e^(−λt) wird durch Logarithmieren linear. Die Steigung der Geraden
+    ln(A) über t ist −λ — daraus ergibt sich die Halbwertszeit T<sub>H</sub>.</p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Strahlung und Materie · Mensch und Strahlung</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/chart.js"></script>
+<script>
+(function () {
+  const T_HALF_TRUE = 150; // s, unbekannt für die SuS
+  const LAMBDA_TRUE = Math.LN2 / T_HALF_TRUE;
+  const N0 = 225; // Anzahl der dargestellten Kerne (Gitter 15x15)
+  const A0 = 240; // erwartete Zählrate (counts/10s) bei t=0
+  const DT = 10; // s, feste Zähldauer
+
+  let lifetimes = [];
+  function newSource() {
+    lifetimes = [];
+    for (let i = 0; i < N0; i++) {
+      lifetimes.push(-Math.log(Math.random()) / LAMBDA_TRUE);
+    }
+  }
+  newSource();
+
+  const canvas = qs("#stage");
+  const ctx = canvas.getContext("2d");
+
+  function currentT() { return Number(qs("#tSlider").value); }
+
+  function trueRate(t) { return A0 * Math.exp(-LAMBDA_TRUE * t); }
+
+  function resizeCanvasForCSS() {
+    const cssW = canvas.parentElement.clientWidth - 32;
+    const cssH = 250;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssW, h: cssH };
+  }
+
+  function draw() {
+    const { w, h } = resizeCanvasForCSS();
+    ctx.fillStyle = "#0a0a0f";
+    ctx.fillRect(0, 0, w, h);
+
+    const t = currentT();
+    const cols = 15, rows = 15;
+    const marginX = 30, marginY = 20;
+    const cellW = (w - 2 * marginX) / cols, cellH = (h - 2 * marginY) / rows;
+    const r = Math.min(cellW, cellH) * 0.32;
+
+    let activeCount = 0;
+    for (let i = 0; i < N0; i++) {
+      const col = i % cols, row = Math.floor(i / cols);
+      const cx = marginX + cellW * (col + 0.5);
+      const cy = marginY + cellH * (row + 0.5);
+      const active = lifetimes[i] > t;
+      if (active) activeCount++;
+      if (active) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = "#7CFC9A";
+        ctx.shadowColor = "#7CFC9A";
+        ctx.shadowBlur = 5;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = "#2a2e3d";
+        ctx.fill();
+      }
+    }
+
+    qs("#activeReadout").textContent = `${activeCount} / ${N0} (${fmt(100 * activeCount / N0, 0)} %)`;
+    qs("#tVal").textContent = `${t} s`;
+
+    requestAnimationFrame(draw);
+  }
+
+  qs("#btnNewSource").addEventListener("click", () => {
+    newSource();
+    qs("#tSlider").value = 0;
+    table.clear();
+  });
+
+  qs("#btnMessen").addEventListener("click", () => {
+    const t = currentT();
+    const expected = trueRate(t) * (DT / 10);
+    const noisy = Math.max(0, Math.round(expected + (Math.random() - 0.5) * 2 * Math.sqrt(Math.max(1, expected))));
+    if (noisy <= 0) {
+      const warnBox = document.getElementById("warnBoxZerfall") || (() => {
+        const el = document.createElement("div");
+        el.id = "warnBoxZerfall";
+        el.className = "info-note";
+        el.style.color = "var(--rose)";
+        qs(".panel").appendChild(el);
+        return el;
+      })();
+      warnBox.textContent = "Keine Zerfälle in diesem Intervall registriert — die Quelle ist bei dieser Zeit schon (fast) vollständig zerfallen.";
+      return;
+    }
+    table.addRow({ t, counts: noisy, rate: noisy / DT, lnRate: Math.log(noisy / DT) });
+  });
+  qs("#btnReset").addEventListener("click", () => table.clear());
+
+  const table = new DataTable(qs("#tableHost"), [
+    { key: "t", label: "t", unit: "s", decimals: 0 },
+    { key: "counts", label: "Zählungen (10s)", decimals: 0 },
+    { key: "rate", label: "Zählrate", unit: "1/s", decimals: 2 },
+    { key: "lnRate", label: "ln(Zählrate)", decimals: 3 },
+  ], {
+    onChange: rows => chart.setPoints(rows.map(r => ({ x: r.t, y: r.lnRate })))
+  });
+
+  const chart = new ScatterChart(qs("#chart"), {
+    xLabel: "t", yLabel: "ln(Zählrate)", xUnit: "s",
+    showRegression: true, minPointsForFit: 2, padZero: false
+  });
+
+  draw();
+
+  new StepGuide(qs("#stepguide"), {
+    title: "Geführte Auswertung: Die Halbwertszeit bestimmen",
+    intro: "Miss die Zählrate an mindestens 6 verschiedenen Zeitpunkten, über den ganzen Zeitraum verteilt.",
+    steps: [
+      {
+        title: "Beobachtung",
+        body: "<p>Bewege den Zeit-Regler langsam von 0 bis 600 s. Beobachte das Punktegitter. Zerfallen die Kerne gleichmäßig verteilt über die Zeit oder anders?</p>",
+        note: true,
+        notePlaceholder: "Deine Beobachtung…",
+      },
+      {
+        title: "Zufall und Gesetzmäßigkeit",
+        body: "<p>Jeder einzelne Kern hat einen völlig zufälligen, nicht vorhersagbaren Zerfallszeitpunkt. Wie kann daraus trotzdem ein exaktes Gesetz für die Gesamtzahl entstehen?</p>",
+        reveal: "<p>Bei sehr vielen Kernen gleicht sich der Zufall im Mittel aus: Die <strong>Wahrscheinlichkeit</strong>, dass ein einzelner Kern in einem bestimmten Zeitintervall zerfällt, ist für alle Kerne gleich groß. Das führt dazu, dass im Mittel immer der gleiche <strong>Anteil</strong> der jeweils noch vorhandenen Kerne pro Zeiteinheit zerfällt — daraus folgt zwingend ein exponentieller Verlauf, unabhängig vom Zufall im Detail.</p>",
+        revealLabel: "Erklärung",
+      },
+      {
+        title: "Messreihe aufnehmen",
+        body: "<p>Miss die Zählrate an mindestens 6 Zeitpunkten zwischen t=0s und t=600s.</p>",
+        hint: "<p>Bei sehr späten Zeiten kann die Zählrate so klein werden, dass in 10s keine Zerfälle mehr registriert werden — das ist normal (Zählstatistik).</p>",
+      },
+      {
+        title: "Halbwertszeit bestimmen",
+        body: "<p>Das Diagramm zeigt ln(Zählrate) über t. Lies die Steigung m ab. Es gilt m = −λ. Berechne daraus die Halbwertszeit T_H = ln2 / λ.</p>",
+        note: true,
+        notePlaceholder: "Meine bestimmte Halbwertszeit T_H ≈ … s",
+        reveal: "<p>Vergleiche deinen Wert mit dem Punktegitter: Nach einer Halbwertszeit sollte ungefähr die Hälfte der Kerne noch aktiv (hell) sein. Stelle den Zeit-Regler auf deinen berechneten Wert T_H und prüfe, ob ungefähr 50 % der Punkte noch hell sind.</p>",
+        revealLabel: "Kontrolle",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>

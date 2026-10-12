@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Absorption &amp; Reichweite — Strahlung und Materie — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <a href="/themen/strahlung-materie/index.html">Strahlung und Materie</a><span class="sep">›</span>
+    <span>Absorption &amp; Reichweite</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Mensch und Strahlung</div>
+    <div class="leitfrage">Wie wirkt Strahlung auf den Menschen?</div>
+    <div class="schwerpunkte">Strahlungsarten · Absorptionsexperimente · Reichweite</div>
+  </div>
+
+  <h1>Absorption ionisierender Strahlung</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    α-, β- und γ-Strahlung unterscheiden sich stark in ihrem Durchdringungsvermögen. Wähle eine Strahlungsart
+    und ein Absorbermaterial, verändere die Dicke und beobachte, wie die Zählrate abnimmt.
+  </p>
+
+  <div class="sim-layout">
+    <div class="panel">
+      <h3>Quelle &amp; Absorber wählen</h3>
+
+      <div class="control">
+        <label>Strahlungsart</label>
+        <div class="pill-row" id="radButtons">
+          <button class="pill" data-r="alpha">α</button>
+          <button class="pill" data-r="beta">β</button>
+          <button class="pill" data-r="gamma">γ</button>
+        </div>
+      </div>
+
+      <div class="control">
+        <label>Absorbermaterial</label>
+        <div class="pill-row" id="matButtons">
+          <button class="pill" data-m="paper">Papier</button>
+          <button class="pill" data-m="alu">Aluminium</button>
+          <button class="pill" data-m="lead">Blei</button>
+        </div>
+      </div>
+
+      <div class="control">
+        <label>Absorberdicke d <span class="val" id="dVal">0,0 mm</span></label>
+        <input type="range" id="dSlider" min="0" max="100" value="0" step="0.5">
+      </div>
+
+      <div class="readout"><span class="k">Zählrate (relativ zu I₀)</span><span class="v" id="rateReadout">–</span></div>
+
+      <div class="control-row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="btnMessen">📏 Zählrate messen</button>
+        <button class="btn btn-secondary" id="btnReset">Tabelle leeren</button>
+      </div>
+      <div class="info-note">Vereinfachtes, aber realitätsnahes Modell — reale Absorptionskurven hängen zusätzlich von der Energie der Strahlung ab.</div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <canvas id="stage" width="640" height="260"></canvas>
+        <div class="stage-caption">Quelle → Absorber → Zählrohr. Teilchen, die den Absorber nicht durchdringen, werden gestoppt.</div>
+      </div>
+
+      <div class="data-panel">
+        <h3>Messwerttabelle</h3>
+        <div id="tableHost"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:var(--accent)"></span>ln(I/I₀) über d (nur sinnvoll bei γ)</span>
+          <span><span class="dot" style="background:var(--teal)"></span>Ausgleichsgerade</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">α: durch Papier gestoppt &nbsp;·&nbsp; β: durch wenige mm Metall gestoppt &nbsp;·&nbsp; γ: I(d) = I₀·e^(−μd)</div>
+    <p>α- und β-Strahlung haben eine (näherungsweise) feste maximale Reichweite. γ-Strahlung wird dagegen nie
+    vollständig, sondern nur exponentiell geschwächt — beschrieben durch den Schwächungskoeffizienten μ.</p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Strahlung und Materie · Mensch und Strahlung</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/chart.js"></script>
+<script>
+(function () {
+  let radType = "alpha";
+  let material = "paper";
+
+  const RANGE_ALPHA_MM = 0.15; // durch praktisch jedes Material sofort gestoppt
+  const RANGE_BETA_MM = { paper: 300, alu: 6, lead: 3 };
+  const MU_GAMMA_PER_MM = { paper: 0.001, alu: 0.03, lead: 0.15 };
+
+  function rateFraction(d) {
+    if (radType === "alpha") {
+      return d < RANGE_ALPHA_MM ? 1 : 0;
+    }
+    if (radType === "beta") {
+      const R = RANGE_BETA_MM[material];
+      return Math.max(0, 1 - d / R);
+    }
+    // gamma
+    const mu = MU_GAMMA_PER_MM[material];
+    return Math.exp(-mu * d);
+  }
+
+  const canvas = qs("#stage");
+  const ctx = canvas.getContext("2d");
+  let particles = [];
+  let lastSpawn = 0;
+
+  function setupButtons() {
+    qsa("#radButtons .pill").forEach(b => {
+      b.addEventListener("click", () => { radType = b.dataset.r; updateActive(); particles = []; });
+    });
+    qsa("#matButtons .pill").forEach(b => {
+      b.addEventListener("click", () => { material = b.dataset.m; updateActive(); particles = []; });
+    });
+    updateActive();
+  }
+  function updateActive() {
+    qsa("#radButtons .pill").forEach(b => setActive(b, b.dataset.r === radType));
+    qsa("#matButtons .pill").forEach(b => setActive(b, b.dataset.m === material));
+  }
+  function setActive(b, active) {
+    b.style.background = active ? "var(--accent)" : "";
+    b.style.color = active ? "#fff" : "";
+    b.style.fontWeight = active ? "700" : "400";
+  }
+
+  qs("#dSlider").addEventListener("input", () => { particles = []; });
+
+  function currentD() { return Number(qs("#dSlider").value); }
+
+  function resizeCanvasForCSS() {
+    const cssW = canvas.parentElement.clientWidth - 32;
+    const cssH = 230;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssW, h: cssH };
+  }
+
+  const MAT_COLOR = { paper: "#c7cbe0", alu: "#9aa1b1", lead: "#565d73" };
+  const MAT_LABEL = { paper: "Papier", alu: "Aluminium", lead: "Blei" };
+
+  function draw(ts) {
+    const { w, h } = resizeCanvasForCSS();
+    ctx.fillStyle = "#0a0a0f";
+    ctx.fillRect(0, 0, w, h);
+
+    const sourceX = 50, absorberX0 = w * 0.42, absorberX1 = w * 0.58, detectorX = w - 50;
+    const midY = h / 2 - 10;
+
+    // Quelle
+    ctx.fillStyle = "#ffd166";
+    ctx.beginPath(); ctx.arc(sourceX, midY, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#c7cbe0"; ctx.font = "12px system-ui"; ctx.textAlign = "center";
+    ctx.fillText("Quelle", sourceX, midY + 30);
+
+    // Absorber
+    const d = currentD();
+    const dNorm = Math.min(1, d / 100);
+    const absW = (absorberX1 - absorberX0) * Math.max(0.08, dNorm);
+    const absX = (absorberX0 + absorberX1) / 2 - absW / 2;
+    ctx.fillStyle = MAT_COLOR[material];
+    ctx.globalAlpha = 0.85;
+    ctx.fillRect(absX, midY - 60, absW, 120);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "#0a0a0f";
+    ctx.font = "11px system-ui";
+    ctx.fillText(MAT_LABEL[material], (absorberX0 + absorberX1) / 2, midY - 70);
+
+    // Detektor
+    ctx.fillStyle = "#3a3f52";
+    ctx.fillRect(detectorX - 14, midY - 40, 28, 80);
+    ctx.fillStyle = "#c7cbe0";
+    ctx.fillText("Zählrohr", detectorX, midY + 60);
+
+    // Teilchen spawnen
+    const frac = rateFraction(d);
+    if (ts - lastSpawn > 90) {
+      lastSpawn = ts;
+      const stopped = Math.random() > frac;
+      particles.push({
+        x: sourceX, y: midY + (Math.random() - 0.5) * 30,
+        stopped, stopAt: stopped ? absX + Math.random() * absW : null
+      });
+    }
+    particles.forEach(p => { p.x += 3.2; });
+    particles = particles.filter(p => p.x < detectorX + 10);
+
+    ctx.fillStyle = "#ffd166";
+    particles.forEach(p => {
+      if (p.stopped && p.x >= p.stopAt) return;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    qs("#rateReadout").textContent = `${fmt(frac * 100, 1)} %`;
+    qs("#dVal").textContent = `${fmt(d, 1)} mm`;
+
+    requestAnimationFrame(draw);
+  }
+
+  qs("#btnMessen").addEventListener("click", () => {
+    const d = currentD();
+    const frac = rateFraction(d);
+    const noisy = Math.max(0, Math.min(1, frac * (1 + (Math.random() - 0.5) * 0.06)));
+    table.addRow({
+      rad: radType === "alpha" ? "α" : radType === "beta" ? "β" : "γ",
+      mat: MAT_LABEL[material],
+      d, frac: noisy * 100,
+      lnFrac: noisy > 0 ? Math.log(noisy) : null
+    });
+  });
+  qs("#btnReset").addEventListener("click", () => table.clear());
+
+  const table = new DataTable(qs("#tableHost"), [
+    { key: "rad", label: "Art" },
+    { key: "mat", label: "Material" },
+    { key: "d", label: "d", unit: "mm", decimals: 1 },
+    { key: "frac", label: "I/I₀", unit: "%", decimals: 1 },
+    { key: "lnFrac", label: "ln(I/I₀)", decimals: 3 },
+  ], {
+    onChange: rows => chart.setPoints(rows.filter(r => r.lnFrac !== null).map(r => ({ x: r.d, y: r.lnFrac })))
+  });
+
+  const chart = new ScatterChart(qs("#chart"), {
+    xLabel: "d", yLabel: "ln(I/I₀)", xUnit: "mm",
+    showRegression: true, minPointsForFit: 2, padZero: false
+  });
+
+  setupButtons();
+  draw(0);
+
+  new StepGuide(qs("#stepguide"), {
+    title: "Geführte Auswertung: Reichweite und Schwächungskoeffizient",
+    intro: "Untersuche zunächst α und β qualitativ, dann γ quantitativ.",
+    steps: [
+      {
+        title: "α-Strahlung",
+        body: "<p>Wähle α-Strahlung. Teste alle drei Materialien mit kleiner Absorberdicke. Was beobachtest du?</p>",
+        note: true,
+        notePlaceholder: "Deine Beobachtung…",
+        reveal: "<p>α-Teilchen (Heliumkerne) sind vergleichsweise schwer und zweifach geladen — sie geben ihre Energie auf sehr kurzer Strecke ab und werden bereits von einem Blatt Papier (oder wenigen cm Luft) vollständig gestoppt.</p>",
+        revealLabel: "Erklärung",
+      },
+      {
+        title: "β-Strahlung",
+        body: "<p>Wähle β-Strahlung. Vergleiche Papier, Aluminium und Blei bei wachsender Dicke. Bei welchem Material und welcher Dicke wird die Zählrate 0?</p>",
+        note: true,
+        notePlaceholder: "Deine Beobachtung…",
+        reveal: "<p>β-Teilchen (Elektronen) durchdringen Papier fast ungehindert, werden aber von wenigen Millimetern Aluminium oder Blei vollständig gestoppt — β-Strahlung hat eine (näherungsweise) feste maximale Reichweite.</p>",
+        revealLabel: "Erklärung",
+      },
+      {
+        title: "γ-Strahlung: Messreihe",
+        body: "<p>Wähle γ-Strahlung und Blei. Miss die Zählrate für mindestens 6 Werte von d zwischen 0 und 100 mm.</p>",
+        hint: "<p>Anders als bei α/β wird die Zählrate hier nie exakt 0 — γ-Strahlung wird nur abgeschwächt, nicht vollständig gestoppt.</p>",
+      },
+      {
+        title: "Schwächungskoeffizient bestimmen",
+        body: "<p>Das Diagramm zeigt ln(I/I₀) über d. Lies die Steigung ab — das ist −μ. Vergleiche μ für Blei mit dem, was du für Aluminium erwarten würdest (miss zur Kontrolle auch eine Messreihe mit Aluminium).</p>",
+        reveal: "<p>Blei hat einen deutlich größeren Schwächungskoeffizienten μ als Aluminium — das ist der Grund, warum Blei (hohe Dichte, hohe Ordnungszahl) als Strahlenschutzmaterial für γ-Strahlung verwendet wird, während für α/β schon dünne Materialien genügen.</p>",
+        revealLabel: "Einordnung",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>

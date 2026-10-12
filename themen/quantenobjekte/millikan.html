@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Millikan-Versuch — Quantenobjekte — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <span>Millikan-Versuch</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Erforschung des Elektrons</div>
+    <div class="leitfrage">Wie können physikalische Eigenschaften wie die Ladung und die Masse eines Elektrons gemessen werden?</div>
+    <div class="schwerpunkte">Elementarladung · Schwebefeldmethode (vereinfacht, ohne Stokes’sche Reibung)</div>
+  </div>
+
+  <h1>Millikan-Versuch: Die Elementarladung</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    Ein geladenes Öltröpfchen befindet sich zwischen zwei Kondensatorplatten. Stelle die Spannung <em>U</em> so
+    ein, dass sich Gewichtskraft und elektrische Kraft gerade aufheben — das Tröpfchen <strong>schwebt</strong>.
+    Wiederhole das mit mehreren Tröpfchen und suche nach einem Muster in den Ladungen.
+  </p>
+
+  <div class="sim-layout">
+    <div class="panel">
+      <h3>Kondensatorspannung einstellen</h3>
+
+      <div class="readout"><span class="k">Tröpfchenmasse m (abgelesen)</span><span class="v" id="massReadout">–</span></div>
+      <div class="readout"><span class="k">Plattenabstand d</span><span class="v">2,00 mm</span></div>
+
+      <div class="control" style="margin-top:16px;">
+        <label>Spannung U <span class="val" id="uVal">0 V</span></label>
+        <input type="range" id="uSlider" min="0" max="1000" value="0" step="0.5">
+        <div class="hint" id="stateHint">Das Tröpfchen fällt.</div>
+      </div>
+
+      <div class="control-row">
+        <button class="btn btn-secondary" id="btnNewDrop">🔄 Neuer Tropfen</button>
+      </div>
+      <div class="control-row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="btnMessen">📏 Schwebezustand messen</button>
+        <button class="btn btn-secondary" id="btnReset">Tabelle leeren</button>
+      </div>
+      <div class="info-note" id="warnBox" style="display:none; color:var(--rose);"></div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <canvas id="stage" width="640" height="300"></canvas>
+        <div class="stage-caption">Öltröpfchen zwischen den Kondensatorplatten (Schwebefeldmethode).</div>
+      </div>
+
+      <div class="data-panel">
+        <h3>Messwerttabelle</h3>
+        <div id="tableHost"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:var(--accent)"></span>Ermittelte Ladung q je Tröpfchen</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">q = m · g · d / U<sub>schweb</sub></div>
+    <p>Alle gemessenen Ladungen sind ganzzahlige Vielfache einer kleinsten Ladung e — der Elementarladung.
+    Das ist der zentrale Befund des Millikan-Versuchs: <strong>Ladung ist gequantelt.</strong></p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Quantenobjekte · Erforschung des Elektrons</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/chart.js"></script>
+<script>
+(function () {
+  const d_plate = 0.002; // m
+  let m_kg, n_true, U_balance, y = 130, vy = 0;
+
+  const canvas = qs("#stage");
+  const ctx = canvas.getContext("2d");
+
+  function newDroplet() {
+    m_kg = 2e-15 + Math.random() * 6e-15;
+    n_true = 1 + Math.floor(Math.random() * 5);
+    U_balance = m_kg * PHYS.g * d_plate / (n_true * PHYS.e);
+    y = 40 + Math.random() * 40;
+    vy = 0;
+    qs("#massReadout").textContent = `${fmtSci(m_kg, 3)} kg`;
+    qs("#warnBox").style.display = "none";
+  }
+
+  qs("#uSlider").addEventListener("input", e => {
+    qs("#uVal").textContent = `${e.target.value} V`;
+  });
+  qs("#btnNewDrop").addEventListener("click", newDroplet);
+
+  function resizeCanvasForCSS() {
+    const cssW = canvas.parentElement.clientWidth - 32;
+    const cssH = 260;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssW, h: cssH };
+  }
+
+  let lastR = 0;
+
+  function step() {
+    const { w, h } = resizeCanvasForCSS();
+    ctx.fillStyle = "#0a0a0f";
+    ctx.fillRect(0, 0, w, h);
+
+    const plateTop = 24, plateBottom = h - 24, plateL = 90, plateR = w - 90;
+    ctx.fillStyle = "#c23a5c";
+    ctx.fillRect(plateL, plateTop - 8, plateR - plateL, 6);
+    ctx.fillStyle = "#3454d1";
+    ctx.fillRect(plateL, plateBottom + 2, plateR - plateL, 6);
+    ctx.fillStyle = "#8790a3";
+    ctx.font = "12px system-ui";
+    ctx.textAlign = "left";
+    ctx.fillText("+ Platte", plateL, plateTop - 14);
+    ctx.fillText("− Platte", plateL, plateBottom + 30);
+
+    const U = Number(qs("#uSlider").value);
+    const r = U_balance > 0 ? U / U_balance : 0;
+    lastR = r;
+    // Normierte, gut sichtbare Animation: r<1 sinkt, r>1 steigt, r=1 schwebt.
+    const targetA = (1 - r) * 0.30; // px/frame^2, y wächst nach unten
+    vy += targetA;
+    vy *= 0.90; // Dämpfung, damit sich das Tröpfchen beruhigt statt zu schwingen
+    vy = Math.max(-2.2, Math.min(2.2, vy));
+    y += vy;
+    // An der Plattengrenze nur die Geschwindigkeit in Richtung Wand kappen,
+    // sonst würde ein "Kleben" an der Wand fälschlich als Schweben gelten.
+    if (y < plateTop + 14) { y = plateTop + 14; if (vy < 0) vy = 0; }
+    if (y > plateBottom - 14) { y = plateBottom - 14; if (vy > 0) vy = 0; }
+
+    const cx = (plateL + plateR) / 2;
+    ctx.fillStyle = "#f2c14e";
+    ctx.beginPath();
+    ctx.arc(cx, y, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Geschwindigkeitspfeil
+    if (Math.abs(vy) > 0.03) {
+      ctx.strokeStyle = "#e8eaf2";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + 20, y);
+      ctx.lineTo(cx + 20, y + Math.sign(vy) * 22);
+      ctx.stroke();
+      ctx.beginPath();
+      const ay = y + Math.sign(vy) * 22;
+      ctx.moveTo(cx + 15, ay - Math.sign(vy) * 6);
+      ctx.lineTo(cx + 20, ay);
+      ctx.lineTo(cx + 25, ay - Math.sign(vy) * 6);
+      ctx.stroke();
+    }
+
+    const hint = qs("#stateHint");
+    if (Math.abs(lastR - 1) < 0.03) hint.textContent = "Das Tröpfchen schwebt (annähernd im Gleichgewicht).";
+    else if (lastR > 1) hint.textContent = "Das Tröpfchen steigt — U ist zu groß.";
+    else hint.textContent = "Das Tröpfchen fällt — U ist zu klein.";
+
+    requestAnimationFrame(step);
+  }
+
+  qs("#btnMessen").addEventListener("click", () => {
+    const U = Number(qs("#uSlider").value);
+    const warnBox = qs("#warnBox");
+    if (Math.abs(lastR - 1) > 0.03 || U < 1) {
+      warnBox.style.display = "block";
+      warnBox.textContent = "Das Tröpfchen schwebt noch nicht stabil. Stelle U so ein, dass es stehen bleibt.";
+      return;
+    }
+    warnBox.style.display = "none";
+    const noisyU = U * (1 + (Math.random() - 0.5) * 0.02);
+    const q = m_kg * PHYS.g * d_plate / noisyU;
+    table.addRow({ trial: table.rows.length + 1, m: m_kg, U: noisyU, q: q });
+  });
+  qs("#btnReset").addEventListener("click", () => table.clear());
+
+  const table = new DataTable(qs("#tableHost"), [
+    { key: "trial", label: "Versuch", decimals: 0 },
+    { key: "m", label: "m", unit: "kg", sci: true, decimals: 2 },
+    { key: "U", label: "U", unit: "V", decimals: 1 },
+    { key: "q", label: "q", unit: "C", sci: true, decimals: 3 },
+  ], {
+    onChange: rows => chart.setPoints(rows.map((r, i) => ({ x: i + 1, y: r.q * 1e19 })))
+  });
+
+  const chart = new ScatterChart(qs("#chart"), {
+    xLabel: "Versuch Nr.", yLabel: "q", yUnit: "· 10⁻¹⁹ C",
+    showRegression: false, padZero: true
+  });
+
+  newDroplet();
+  step();
+
+  new StepGuide(qs("#stepguide"), {
+    title: "Geführte Auswertung: Ist Ladung gequantelt?",
+    intro: "Miss mindestens 6 Tröpfchen (immer „Neuer Tropfen“ vor jeder neuen Messung).",
+    steps: [
+      {
+        title: "Schwebezustand finden",
+        body: "<p>Stelle U so ein, dass das Tröpfchen möglichst lange ruhig in der Mitte stehen bleibt (Geschwindigkeitspfeil verschwindet). Klicke dann „Schwebezustand messen“.</p>",
+        hint: "<p>Kleine Korrekturen mit dem Regler machen — bei zu großen Sprüngen schwingt das Tröpfchen über.</p>",
+      },
+      {
+        title: "Messreihe aufnehmen",
+        body: "<p>Wiederhole die Messung mit mindestens 6 verschiedenen Tröpfchen (Button „Neuer Tropfen“). Notiere jeweils q.</p>",
+        note: true,
+        notePlaceholder: "Meine gemessenen q-Werte (in 10⁻¹⁹ C): …",
+      },
+      {
+        title: "Muster suchen",
+        body: "<p>Schau dir deine q-Werte an. Teile jeden Wert testweise durch 1, 2, 3, 4, 5. Bei welcher Zahl ergibt sich für <strong>alle</strong> deine Werte ein ähnliches Ergebnis?</p>",
+        note: true,
+        notePlaceholder: "Meine Vermutung für die kleinste gemeinsame Ladung e ≈ … · 10⁻¹⁹ C",
+        reveal: `<p>Jede gemessene Ladung ist ein ganzzahliges Vielfaches derselben kleinsten Ladung: q = n·e mit n = 1, 2, 3, …. Das ist die Kernaussage des Millikan-Versuchs. Literaturwert: e ≈ ${fmtSci(PHYS.e, 4)} C.</p>`,
+        revealLabel: "Auswertung",
+      },
+      {
+        title: "Deutung",
+        body: "<p>Was bedeutet es physikalisch, dass alle Ladungen ganzzahlige Vielfache von e sind? Was sagt das über die Ladung eines einzelnen Elektrons aus?</p>",
+        reveal: "<p>Ladung tritt nie „beliebig teilbar“ auf, sondern nur in Paketen der Größe e. Jedes Tröpfchen trägt eine ganze Anzahl überschüssiger (oder fehlender) Elektronen — die Ladung eines einzelnen Elektrons beträgt genau e.</p>",
+        revealLabel: "Deutung",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>

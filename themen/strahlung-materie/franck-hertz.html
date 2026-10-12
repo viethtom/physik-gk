@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Franck-Hertz-Versuch — Strahlung und Materie — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <a href="/themen/strahlung-materie/index.html">Strahlung und Materie</a><span class="sep">›</span>
+    <span>Franck-Hertz-Versuch</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Erforschung des Mikro- und Makrokosmos</div>
+    <div class="leitfrage">Wie gewinnt man Informationen zum Aufbau der Materie?</div>
+    <div class="schwerpunkte">Quantenhafte Anregung von Atomen · Franck-Hertz-Versuch</div>
+  </div>
+
+  <h1>Der Franck-Hertz-Versuch</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    Elektronen werden in einer mit Quecksilberdampf gefüllten Röhre beschleunigt. Immer wenn ihre Energie
+    gerade ausreicht, ein Hg-Atom anzuregen, bricht der Auffängerstrom ein. Fahre die Beschleunigungsspannung
+    langsam hoch und finde die Minima der Stromkurve.
+  </p>
+
+  <div class="sim-layout">
+    <div class="panel">
+      <h3>Beschleunigungsspannung</h3>
+
+      <div class="control">
+        <label>U<sub>B</sub> <span class="val" id="uVal">0,0 V</span></label>
+        <input type="range" id="uSlider" min="0" max="30" value="0" step="0.1">
+        <div class="hint">Langsam hochfahren und auf die Tiefpunkte der Kurve achten.</div>
+      </div>
+
+      <div class="readout"><span class="k">Auffängerstrom I (aktuell)</span><span class="v" id="currentReadout">–</span></div>
+
+      <div class="control-row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="btnMessen">📏 Minimum messen</button>
+        <button class="btn btn-secondary" id="btnReset">Tabelle leeren</button>
+      </div>
+      <div class="info-note" id="warnBox" style="display:none; color:var(--rose);"></div>
+      <div class="info-note">Die Anregungsenergie des Quecksilbers ist unbekannt — du bestimmst sie aus der Messreihe.</div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <canvas id="stage" width="640" height="300"></canvas>
+        <div class="stage-caption">Auffängerstrom I in Abhängigkeit von U<sub>B</sub> (baut sich beim Hochfahren auf, wie am Oszilloskop).</div>
+      </div>
+
+      <div class="data-panel">
+        <h3>Messwerttabelle</h3>
+        <div id="tableHost"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:var(--accent)"></span>U<sub>B</sub> über Ordnung k</span>
+          <span><span class="dot" style="background:var(--teal)"></span>Ausgleichsgerade</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">U<sub>B</sub>(k) = k · ΔE / e</div>
+    <p>Die Minima treten bei ganzzahligen Vielfachen der Anregungsenergie auf. Die Steigung der Geraden
+    U<sub>B</sub>(k) liefert direkt ΔE/e — multipliziert mit e ergibt sich die Anregungsenergie in Joule bzw.
+    direkt in eV.</p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Strahlung und Materie · Erforschung des Mikro- und Makrokosmos</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/chart.js"></script>
+<script>
+(function () {
+  const dE_true_eV = 4.9; // Anregungsenergie Hg, den SuS unbekannt
+  const A = 0.15; // Skalierungsfaktor für die Hüllkurve
+
+  function currentOf(U) {
+    if (U <= 0) return 0;
+    const envelope = A * Math.pow(U, 1.5);
+    const modulation = (1 - Math.cos(2 * Math.PI * U / dE_true_eV)) / 2;
+    return envelope * modulation;
+  }
+  function isNearMinimum(U) {
+    const k = Math.round(U / dE_true_eV);
+    if (k <= 0) return false;
+    return Math.abs(U - k * dE_true_eV) < 0.15;
+  }
+  function orderOf(U) {
+    return Math.round(U / dE_true_eV);
+  }
+
+  const canvas = qs("#stage");
+  const ctx = canvas.getContext("2d");
+
+  function resizeCanvasForCSS() {
+    const cssW = canvas.parentElement.clientWidth - 32;
+    const cssH = 260;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssW, h: cssH };
+  }
+
+  const U_MAX = 30, I_MAX = A * Math.pow(U_MAX, 1.5) * 1.08;
+
+  function draw() {
+    const { w, h } = resizeCanvasForCSS();
+    ctx.fillStyle = "#06090a";
+    ctx.fillRect(0, 0, w, h);
+
+    const padL = 46, padR = 16, padT = 16, padB = 34;
+    const plotW = w - padL - padR, plotH = h - padT - padB;
+    const U = Number(qs("#uSlider").value);
+
+    const X = u => padL + (u / U_MAX) * plotW;
+    const Y = i => padT + plotH - (i / I_MAX) * plotH;
+
+    // Achsen + Gitter
+    ctx.strokeStyle = "#2a3a2f";
+    ctx.lineWidth = 1;
+    ctx.font = "10px system-ui";
+    ctx.fillStyle = "#6f8f78";
+    ctx.textAlign = "center";
+    for (let u = 0; u <= U_MAX; u += 5) {
+      const px = X(u);
+      ctx.beginPath(); ctx.moveTo(px, padT); ctx.lineTo(px, padT + plotH); ctx.stroke();
+      ctx.fillText(String(u), px, padT + plotH + 16);
+    }
+    ctx.fillText("U_B / V", w - padR - 20, padT + plotH + 16);
+
+    ctx.strokeStyle = "#3fae63";
+    ctx.lineWidth = 2;
+    ctx.shadowColor = "#3fae63";
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    const steps = Math.max(2, Math.round(U * 6));
+    for (let i = 0; i <= steps; i++) {
+      const u = (U * i) / steps;
+      const cur = currentOf(u);
+      const px = X(u), py = Y(cur);
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // aktueller Punkt
+    const curNow = currentOf(U);
+    ctx.beginPath();
+    ctx.arc(X(U), Y(curNow), 4, 0, Math.PI * 2);
+    ctx.fillStyle = "#a8ffcB";
+    ctx.fill();
+
+    qs("#currentReadout").textContent = `${fmt(curNow, 2)} (rel. Einheiten)`;
+    qs("#uVal").textContent = `${fmt(U, 1)} V`;
+
+    requestAnimationFrame(draw);
+  }
+
+  qs("#uSlider").addEventListener("input", () => {});
+
+  qs("#btnMessen").addEventListener("click", () => {
+    const U = Number(qs("#uSlider").value);
+    const warnBox = qs("#warnBox");
+    if (!isNearMinimum(U)) {
+      warnBox.style.display = "block";
+      warnBox.textContent = "Das ist (noch) kein Minimum der Stromkurve. Bewege den Regler feiner, bis du an einem Tiefpunkt stehst.";
+      return;
+    }
+    warnBox.style.display = "none";
+    const k = orderOf(U);
+    const noisyU = U * (1 + (Math.random() - 0.5) * 0.01);
+    table.addRow({ k, U: noisyU });
+  });
+  qs("#btnReset").addEventListener("click", () => table.clear());
+
+  const table = new DataTable(qs("#tableHost"), [
+    { key: "k", label: "Ordnung k", decimals: 0 },
+    { key: "U", label: "U_B", unit: "V", decimals: 2 },
+  ], {
+    onChange: rows => chart.setPoints(rows.map(r => ({ x: r.k, y: r.U })))
+  });
+
+  const chart = new ScatterChart(qs("#chart"), {
+    xLabel: "Ordnung k", yLabel: "U_B", yUnit: "V",
+    showRegression: true, minPointsForFit: 2
+  });
+
+  draw();
+
+  new StepGuide(qs("#stepguide"), {
+    title: "Geführte Auswertung: Die Anregungsenergie von Quecksilber",
+    intro: "Finde nacheinander mindestens 5 Minima der Stromkurve.",
+    steps: [
+      {
+        title: "Beobachtung",
+        body: "<p>Fahre U_B langsam von 0 bis 30 V hoch. Was passiert mit dem Auffängerstrom? Beschreibe das Muster.</p>",
+        note: true,
+        notePlaceholder: "Deine Beobachtung…",
+      },
+      {
+        title: "Deutung der Minima",
+        body: "<p>Warum bricht der Strom bei bestimmten Spannungen periodisch ein?</p>",
+        reveal: "<p>Wenn ein Elektron auf dem Weg zum Gitter gerade so viel kinetische Energie erreicht hat wie die Anregungsenergie ΔE eines Hg-Atoms, kann es beim Stoß seine gesamte Energie an das Atom abgeben (inelastischer Stoß). Danach hat es nicht mehr genug Energie, um die Gegenspannung zu überwinden — der Strom bricht ein. Bei einem Vielfachen k·ΔE kann dieser Energieverlust mehrfach hintereinander auftreten.</p>",
+        revealLabel: "Erklärung",
+      },
+      {
+        title: "Messreihe aufnehmen",
+        body: "<p>Positioniere den Regler nacheinander auf jedem Minimum und klicke „Minimum messen“. Notiere die Ordnung k (1. Minimum, 2. Minimum, …).</p>",
+        hint: "<p>Die Minima liegen ungefähr äquidistant — wenn du das erste gefunden hast, weißt du ungefähr, wo die nächsten liegen.</p>",
+      },
+      {
+        title: "Anregungsenergie bestimmen",
+        body: "<p>Das Diagramm zeigt U_B über der Ordnung k. Lies die Steigung ab — das ist ΔE/e in Volt.</p>",
+        reveal: "<p>Literaturwert für Quecksilber: ΔE ≈ 4,9 eV. Das entspricht einem Übergang, bei dem ein Photon der Wellenlänge ≈ 253 nm (UV) abgestrahlt werden kann, wenn das angeregte Atom wieder in den Grundzustand zurückfällt.</p>",
+        revealLabel: "Vergleichswert",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>

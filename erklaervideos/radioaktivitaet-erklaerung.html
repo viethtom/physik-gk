@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warum zerfällt ein Kern? — Erklär-Animation — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/erklaervideos/index.html">Erklärvideos</a><span class="sep">›</span>
+    <span>Warum zerfällt ein Kern?</span>
+  </div>
+
+  <section class="hero" style="padding-top:24px; padding-bottom: 10px;">
+    <div class="eyebrow">Erklär-Animation · Strahlung und Materie</div>
+    <h1>Warum zerfällt ein Kern? Radioaktivität und Halbwertszeit</h1>
+    <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+      Szene für Szene: vom völlig zufälligen Einzelereignis zum exakten Exponentialgesetz. Mit Pfeiltasten
+      ◀ ▶ oder den Buttons navigierbar.
+    </p>
+  </section>
+
+  <div id="player"></div>
+
+  <p class="center-note">
+    Willst du selbst eine Halbwertszeit bestimmen? → <a href="/themen/strahlung-materie/radioaktiver-zerfall.html">Zur Zerfalls-Simulation</a>
+  </p>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Erklär-Animation im Stil bekannter Wissenschafts-Erklärvideos (web-nativ, ohne Videodatei)</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script>
+(function () {
+  const ACCENT = "var(--accent)", TEAL = "var(--teal)", AMBER = "var(--amber)", ROSE = "var(--rose)", TEXT = "var(--text)", MUTED = "var(--text-muted)";
+
+  function text(x, y, str, opts = {}) {
+    const t = svgEl("text", Object.assign({
+      x, y, fill: TEXT, "font-family": "system-ui,sans-serif",
+      "font-size": opts.size || 20, "font-weight": opts.weight || 400,
+      "text-anchor": opts.anchor || "middle", "data-anim": "1"
+    }, opts.attrs || {}));
+    t.textContent = str;
+    if (opts.delay) t.setAttribute("data-delay", opts.delay);
+    return t;
+  }
+
+  function dotGrid(svg, x0, y0, cols, rows, gap, activeFraction, seed, delay) {
+    let i = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const active = ((i * 37 + seed * 13) % 100) / 100 < activeFraction;
+        svg.appendChild(svgEl("circle", {
+          cx: x0 + c * gap, cy: y0 + r * gap, r: gap * 0.28,
+          fill: active ? TEAL : "#2a2e3d",
+          "data-anim": "1", "data-delay": (delay || 0) + i * 4
+        }));
+        i++;
+      }
+    }
+  }
+
+  const scenes = [
+    {
+      caption: `<span class="scene-title-badge">1 / 7 · Die Beobachtung</span>Ein Geiger-Zähler klickt völlig unregelmäßig. <strong>Wann genau</strong> ein bestimmter Atomkern zerfällt, lässt sich nicht vorhersagen.`,
+      render(svg) {
+        svg.appendChild(text(400, 80, "Radioaktiver Zerfall", { size: 30, weight: 700 }));
+        [ [220, 220], [340, 190], [460, 240], [560, 200] ].forEach((p, i) => {
+          svg.appendChild(svgEl("circle", { cx: p[0], cy: p[1], r: 5, fill: "#ffd166", "data-anim": "1", "data-delay": 300 + i * 250 }));
+        });
+        svg.appendChild(text(400, 320, "„Klick“ — „......“ — „Klick, Klick“ — „.........“", { size: 18, weight: 700, attrs: { fill: AMBER }, delay: 1400 }));
+        svg.appendChild(text(400, 355, "Ein völlig unregelmäßiges Muster.", { size: 15, attrs: { fill: MUTED }, delay: 1700 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">2 / 7 · Ein einzelner Kern</span>Für einen <em>einzelnen</em> Kern gibt es keine Möglichkeit, den Zerfallszeitpunkt vorherzusagen — er kann in einer Sekunde oder erst in tausend Jahren zerfallen.`,
+      render(svg) {
+        svg.appendChild(text(400, 60, "Ein einzelner Atomkern", { size: 24, weight: 700 }));
+        svg.appendChild(svgEl("circle", { cx: 400, cy: 200, r: 30, fill: ACCENT, "data-anim": "1", "data-delay": 200 }));
+        svg.appendChild(text(400, 208, "?", { size: 32, weight: 700, attrs: { fill: "#fff" }, delay: 600 }));
+        svg.appendChild(text(400, 280, "Zerfällt er jetzt? In einer Sekunde?", { size: 17, delay: 1000 }));
+        svg.appendChild(text(400, 310, "In tausend Jahren? — Unmöglich zu sagen.", { size: 17, delay: 1250 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">3 / 7 · Aber viele Kerne …</span>Bei sehr <strong>vielen</strong> Kernen wird aus dem Zufall im Einzelnen eine erstaunlich präzise Gesetzmäßigkeit im Ganzen.`,
+      render(svg) {
+        svg.appendChild(text(400, 40, "Viele Kerne zugleich", { size: 22, weight: 700 }));
+        dotGrid(svg, 250, 90, 12, 10, 22, 1.0, 1, 200);
+        svg.appendChild(text(400, 340, "Jeder Punkt: ein Kern, jeder mit eigenem Zufallszeitpunkt.", { size: 14, attrs: { fill: MUTED }, delay: 1400 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">4 / 7 · Die Halbwertszeit</span>Nach einer festen Zeit T<sub>H</sub> — der <strong>Halbwertszeit</strong> — ist im Mittel immer genau die Hälfte der ursprünglichen Kerne zerfallen.`,
+      render(svg) {
+        svg.appendChild(text(400, 40, "Nach einer Halbwertszeit T_H", { size: 22, weight: 700 }));
+        dotGrid(svg, 250, 90, 12, 10, 22, 0.5, 2, 200);
+        svg.appendChild(text(400, 340, "Genau die Hälfte ist zerfallen — unabhängig vom Startwert!", { size: 15, weight: 700, attrs: { fill: TEAL }, delay: 1400 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">5 / 7 · Das Exponentialgesetz</span>Trägt man die Anzahl der noch vorhandenen Kerne über die Zeit auf, ergibt sich eine fallende Exponentialkurve: <span class="formula-inline">N(t) = N₀·e^(−λt)</span>.`,
+      render(svg) {
+        svg.appendChild(text(400, 40, "N(t) = N₀ · e^(−λt)", { size: 24, weight: 700, attrs: { "font-family": "monospace", fill: ACCENT } }));
+        const g = svgEl("g", { "data-anim": "1", "data-delay": 300 });
+        g.appendChild(svgEl("line", { x1: 130, y1: 320, x2: 620, y2: 320, stroke: MUTED, "stroke-width": 1.5 }));
+        g.appendChild(svgEl("line", { x1: 130, y1: 320, x2: 130, y2: 90, stroke: MUTED, "stroke-width": 1.5 }));
+        svg.appendChild(g);
+        let d = "M 130 90";
+        for (let x = 0; x <= 490; x += 10) {
+          const t = x / 100;
+          const y = 90 + (320 - 90) * (1 - Math.exp(-t));
+          d += ` L ${130 + x} ${y.toFixed(1)}`;
+        }
+        svg.appendChild(svgEl("path", { d, stroke: TEAL, fill: "none", "stroke-width": 3, "data-anim": "1", "data-delay": 600 }));
+        svg.appendChild(text(400, 355, "t", { size: 15, delay: 900 }));
+        svg.appendChild(text(105, 100, "N", { size: 15, delay: 900 }));
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">6 / 7 · Immer wieder halbieren</span>Nach 2·T<sub>H</sub> ist nur noch ein <strong>Viertel</strong> übrig, nach 3·T<sub>H</sub> ein <strong>Achtel</strong> — die Kurve halbiert sich in jedem gleich langen Zeitabschnitt erneut.`,
+      render(svg) {
+        svg.appendChild(text(400, 40, "Immer die Hälfte der Hälfte", { size: 22, weight: 700 } ));
+        const stages = [
+          { frac: "1", y: 90, label: "t = 0" },
+          { frac: "1/2", y: 150, label: "t = T_H" },
+          { frac: "1/4", y: 210, label: "t = 2·T_H" },
+          { frac: "1/8", y: 270, label: "t = 3·T_H" },
+        ];
+        stages.forEach((s, i) => {
+          const barW = 300 * Math.pow(0.5, i);
+          svg.appendChild(svgEl("rect", { x: 250, y: s.y, width: barW, height: 20, fill: [ACCENT, TEAL, AMBER, ROSE][i], "data-anim": "1", "data-delay": 300 + i * 350 }));
+          svg.appendChild(text(240, s.y + 15, s.label, { size: 13, anchor: "end", attrs: { fill: MUTED }, delay: 300 + i * 350 }));
+          svg.appendChild(text(260 + barW, s.y + 15, s.frac, { size: 13, anchor: "start", attrs: { fill: TEXT }, delay: 500 + i * 350 }));
+        });
+      }
+    },
+    {
+      caption: `<span class="scene-title-badge">7 / 7 · Fazit</span>Individueller Zufall und exaktes Naturgesetz sind kein Widerspruch — bei genügend großen Zahlen wird aus Wahrscheinlichkeit Gesetzmäßigkeit.`,
+      render(svg) {
+        svg.appendChild(text(400, 150, "Zufall im Kleinen,", { size: 28, weight: 700, delay: 100 }));
+        svg.appendChild(text(400, 195, "Gesetz im Großen.", { size: 28, weight: 700, attrs: { fill: ACCENT }, delay: 500 }));
+        svg.appendChild(text(400, 260, "N(t) = N₀ · e^(−λt)  ,  T_H = ln2 / λ", { size: 18, attrs: { "font-family": "monospace", fill: TEAL }, delay: 1000 }));
+        svg.appendChild(text(400, 320, "Genau dieses Prinzip nutzt man z. B. bei der C-14-Methode zur Altersbestimmung.", { size: 14, attrs: { fill: MUTED }, delay: 1500 }));
+      }
+    },
+  ];
+
+  new ScenePlayer(qs("#player"), scenes);
+})();
+</script>
+</body>
+</html>

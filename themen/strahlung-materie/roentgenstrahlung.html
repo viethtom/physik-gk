@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Röntgenstrahlung — Strahlung und Materie — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <a href="/themen/strahlung-materie/index.html">Strahlung und Materie</a><span class="sep">›</span>
+    <span>Röntgenstrahlung</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Erforschung des Mikro- und Makrokosmos</div>
+    <div class="leitfrage">Wie gewinnt man Informationen zum Aufbau der Materie?</div>
+    <div class="schwerpunkte">Röntgenstrahlung · Bremsspektrum · Umkehrung des Photoeffekts</div>
+  </div>
+
+  <h1>Röntgenstrahlung: das Bremsspektrum</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    In einer Röntgenröhre werden Elektronen mit der Spannung U beschleunigt und beim Abbremsen in der
+    Anode abrupt gestoppt. Dabei entsteht ein kontinuierliches Spektrum mit einer scharfen
+    <strong>Grenzwellenlänge</strong> λ<sub>min</sub> — die Umkehrung des Photoeffekts.
+  </p>
+
+  <div class="sim-layout">
+    <div class="panel">
+      <h3>Anodenspannung einstellen</h3>
+
+      <div class="control">
+        <label>Anodenspannung U <span class="val" id="uVal">20,0 kV</span></label>
+        <input type="range" id="uSlider" min="5" max="35" value="20" step="0.5">
+      </div>
+
+      <div class="readout"><span class="k">Anodenmaterial</span><span class="v">Kupfer (Cu)</span></div>
+      <div class="readout"><span class="k">Charakteristische Linien</span><span class="v" id="charReadout">–</span></div>
+
+      <div class="control-row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="btnMessen">📏 λ<sub>min</sub> messen</button>
+        <button class="btn btn-secondary" id="btnReset">Tabelle leeren</button>
+      </div>
+      <div class="info-note">Das Wirkungsquantum h ist unbekannt — du bestimmst es aus der Messreihe.</div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <canvas id="stage" width="640" height="280"></canvas>
+        <div class="stage-caption">Röntgenspektrum: Intensität über Wellenlänge (Lineal in pm).</div>
+      </div>
+
+      <div class="data-panel">
+        <h3>Messwerttabelle</h3>
+        <div id="tableHost"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:var(--accent)"></span>λ<sub>min</sub> über 1/U</span>
+          <span><span class="dot" style="background:var(--teal)"></span>Ausgleichsgerade</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">λ<sub>min</sub> = h·c / (e·U) &nbsp;&nbsp;(Duane-Hunt-Gesetz)</div>
+    <p>Die maximale Photonenenergie entsteht, wenn ein Elektron seine gesamte kinetische Energie e·U in
+    einem einzigen Bremsvorgang abgibt: h·f<sub>max</sub> = e·U. Die Steigung von λ<sub>min</sub> über 1/U
+    liefert h·c/e — daraus lässt sich h bestimmen.</p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Strahlung und Materie · Erforschung des Mikro- und Makrokosmos</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/chart.js"></script>
+<script>
+(function () {
+  const U_K_V = 9000; // Anregungsschwelle K-Schale Kupfer
+  const LAMBDA_KALPHA_PM = 154.1, LAMBDA_KBETA_PM = 139.2;
+
+  function lambdaMin_pm(U_V) {
+    const lambda_m = (PHYS.h * PHYS.c) / (PHYS.e * U_V);
+    return lambda_m * 1e12;
+  }
+
+  const canvas = qs("#stage");
+  const ctx = canvas.getContext("2d");
+
+  function currentUV() { return Number(qs("#uSlider").value) * 1000; }
+
+  function intensityAt(lambda_pm, lambdaMinPm) {
+    if (lambda_pm < lambdaMinPm) return 0;
+    const w = lambdaMinPm * 0.7;
+    let I = (lambda_pm - lambdaMinPm) * Math.exp(-(lambda_pm - lambdaMinPm) / w);
+    return I;
+  }
+
+  function resizeCanvasForCSS() {
+    const cssW = canvas.parentElement.clientWidth - 32;
+    const cssH = 250;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssW, h: cssH };
+  }
+
+  function draw() {
+    const { w, h } = resizeCanvasForCSS();
+    ctx.fillStyle = "#0a0a0f";
+    ctx.fillRect(0, 0, w, h);
+
+    const U = currentUV();
+    const lambdaMin = lambdaMin_pm(U);
+    const hasChar = U >= U_K_V;
+
+    qs("#uVal").textContent = `${fmt(U / 1000, 1)} kV`;
+    qs("#charReadout").textContent = hasChar ? "sichtbar (Kα, Kβ)" : "noch nicht angeregt (U < 9,0 kV)";
+
+    const xMax = Math.max(lambdaMin * 3.2, LAMBDA_KALPHA_PM * 1.3);
+    const padL = 46, padR = 16, padT = 16, padB = 34;
+    const plotW = w - padL - padR, plotH = h - padT - padB;
+    const X = lam => padL + (lam / xMax) * plotW;
+
+    // Kurve berechnen für Normierung
+    let maxI = 0;
+    const N = 260;
+    const curve = [];
+    for (let i = 0; i <= N; i++) {
+      const lam = (xMax * i) / N;
+      let I = intensityAt(lam, lambdaMin);
+      curve.push(I);
+      if (I > maxI) maxI = I;
+    }
+    if (maxI <= 0) maxI = 1;
+    const Y = I => padT + plotH - (I / (maxI * 1.15)) * plotH;
+
+    // Achsen
+    ctx.strokeStyle = "#2a2e3d";
+    ctx.fillStyle = "#8a91a3";
+    ctx.font = "10px system-ui";
+    ctx.textAlign = "center";
+    const step = xMax > 300 ? 50 : 20;
+    for (let lam = 0; lam <= xMax; lam += step) {
+      const px = X(lam);
+      ctx.beginPath(); ctx.moveTo(px, padT); ctx.lineTo(px, padT + plotH); ctx.stroke();
+      ctx.fillText(String(lam), px, padT + plotH + 16);
+    }
+    ctx.fillText("λ / pm", w - padR - 24, padT + plotH + 16);
+
+    // Kontinuierliches Spektrum
+    ctx.strokeStyle = "#8fd3ff";
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    curve.forEach((I, i) => {
+      const lam = (xMax * i) / N;
+      const px = X(lam), py = Y(I);
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+    ctx.fillStyle = "rgba(143,211,255,0.12)";
+    ctx.lineTo(X(xMax), padT + plotH);
+    ctx.lineTo(X(0), padT + plotH);
+    ctx.closePath();
+    ctx.fill();
+
+    // Charakteristische Linien
+    if (hasChar) {
+      [LAMBDA_KALPHA_PM, LAMBDA_KBETA_PM].forEach(lam => {
+        const px = X(lam);
+        ctx.strokeStyle = "#ffd166";
+        ctx.shadowColor = "#ffd166";
+        ctx.shadowBlur = 8;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(px, padT + plotH);
+        ctx.lineTo(px, padT + 6);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      });
+    }
+
+    // Grenzwellenlänge markieren
+    const pxMin = X(lambdaMin);
+    ctx.strokeStyle = "#ea7d9a";
+    ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pxMin, padT); ctx.lineTo(pxMin, padT + plotH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#ea7d9a";
+    ctx.fillText("λmin", pxMin, padT + 10);
+
+    requestAnimationFrame(draw);
+  }
+
+  qs("#btnMessen").addEventListener("click", () => {
+    const U = currentUV();
+    const trueLambda = lambdaMin_pm(U);
+    const noisy = trueLambda * (1 + (Math.random() - 0.5) * 0.03);
+    table.addRow({ U: U / 1000, invU: 1 / U, lambdaMin: noisy });
+  });
+  qs("#btnReset").addEventListener("click", () => table.clear());
+
+  const table = new DataTable(qs("#tableHost"), [
+    { key: "U", label: "U", unit: "kV", decimals: 1 },
+    { key: "lambdaMin", label: "λ_min", unit: "pm", decimals: 2 },
+  ], {
+    onChange: rows => chart.setPoints(rows.map(r => ({ x: r.invU, y: r.lambdaMin })))
+  });
+
+  const chart = new ScatterChart(qs("#chart"), {
+    xLabel: "1/U", yLabel: "λ_min", xUnit: "1/V", yUnit: "pm",
+    showRegression: true, minPointsForFit: 2
+  });
+
+  draw();
+
+  new StepGuide(qs("#stepguide"), {
+    title: "Geführte Auswertung: Von λ_min zum Wirkungsquantum",
+    intro: "Miss λ_min für mindestens 5 verschiedene Anodenspannungen U.",
+    steps: [
+      {
+        title: "Beobachtung",
+        body: "<p>Erhöhe U langsam von 5 kV bis 35 kV. Was passiert mit λ_min? Ab welcher Spannung erscheinen die charakteristischen Linien (Anzeige „Charakteristische Linien“)?</p>",
+        note: true,
+        notePlaceholder: "Deine Beobachtung…",
+      },
+      {
+        title: "Bremsspektrum vs. charakteristisches Spektrum",
+        body: "<p>Das breite, kontinuierliche Spektrum und die scharfen Linien haben unterschiedliche Ursachen. Was unterscheidet sie?</p>",
+        reveal: "<p>Das <strong>kontinuierliche Bremsspektrum</strong> entsteht durch abgebremste Elektronen, die einen beliebigen Anteil ihrer Energie als Photon abgeben können — daher ein Kontinuum bis zur scharfen Grenze λ_min (maximale Energieabgabe). Die <strong>charakteristischen Linien</strong> entstehen erst, wenn Elektronen energiereich genug sind, innere Schalen (K-Schale) der Anodenatome zu ionisieren; beim Nachrücken von Elektronen aus höheren Schalen werden Photonen fester, materialtypischer Energie frei.</p>",
+        revealLabel: "Erklärung",
+      },
+      {
+        title: "Messreihe aufnehmen",
+        body: "<p>Miss λ_min für mindestens 5 Werte von U zwischen 5 kV und 35 kV.</p>",
+      },
+      {
+        title: "Wirkungsquantum bestimmen",
+        body: "<p>Das Diagramm zeigt λ_min über 1/U. Die Steigung entspricht h·c/e. Berechne daraus h (in Js) und vergleiche mit dem Wert aus der Photoeffekt-Simulation.</p>",
+        reveal: `<p>Literaturwert: h ≈ ${fmtSci(PHYS.h, 3)} J·s. Die Röntgenröhre ist quasi die „Umkehrung“ des Photoeffekts: statt Licht Elektronen auszulösen, erzeugen hier abgebremste Elektronen Photonen — beide Experimente liefern dieselbe Naturkonstante h.</p>`,
+        revealLabel: "Vergleichswert",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aufgaben: Quantenobjekte — Physik GK</title>
+<meta name="description" content="Gestufte Übungsaufgaben zu Quantenobjekten (Photoeffekt, Millikan, Fadenstrahlrohr, Elektronenbeugung, Doppelspalt) mit Lösungen auf Anfrage.">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span><span>Aufgaben · Quantenobjekte</span>
+  </div>
+
+  <section class="hero" style="padding-top:24px;">
+    <div class="eyebrow">Übung &amp; Klausurvorbereitung</div>
+    <h1>Aufgaben: Quantenobjekte</h1>
+    <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+      Zu jedem Experiment gibt es drei Aufgaben mit steigendem Niveau: <strong>Grundlagen</strong>
+      (Verständnis/Reproduktion), <strong>Anwendung</strong> (Rechenaufgabe wie in einer Klausur) und
+      <strong>Transfer</strong> (vertiefte Auswertung, Klausur-Niveau). Versuche jede Aufgabe erst selbst,
+      bevor du dir die Lösung anzeigen lässt.
+    </p>
+  </section>
+
+  <div class="pill-row">
+    <span class="pill">⚛️ Beugung &amp; Interferenz</span>
+    <span class="pill">💡 Photoeffekt</span>
+    <span class="pill">🛢️ Millikan-Versuch</span>
+    <span class="pill">🧲 Fadenstrahlrohr</span>
+    <span class="pill">🎯 Elektronenbeugung</span>
+    <span class="pill">🌊 Licht und Materie</span>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Beugung und Interferenz</h2>
+
+  <div class="task">
+    <span class="tier-badge tier-1">Grundlagen</span>
+    <h4>1. Konstruktive Interferenz</h4>
+    <p>Erkläre mithilfe des Huygens’schen Prinzips, wie es hinter einem Doppelspalt zu einem Interferenzmuster kommt. Nenne die Bedingung für ein Maximum (konstruktive Interferenz).</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>Nach Huygens ist jeder Punkt einer Wellenfront Ausgangspunkt einer kreisförmigen Elementarwelle. Hinter den beiden Spalten breiten sich zwei solche Elementarwellen aus und überlagern sich (Superposition). An Orten, an denen der Gangunterschied Δs ein ganzzahliges Vielfaches der Wellenlänge ist, kommen die Wellen „in Phase“ an und verstärken sich: Δs = k·λ mit k = 0, 1, 2, … (konstruktive Interferenz, Maximum). Bei Δs = (k+½)·λ löschen sie sich dagegen aus (destruktive Interferenz, Minimum).</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-2">Anwendung</span>
+    <h4>2. Streifenabstand berechnen</h4>
+    <p>Bei einem Doppelspaltversuch mit grünem Laserlicht (λ = 532 nm) und Spaltabstand d = 0,20 mm wird der Schirm im Abstand L = 3,00 m aufgestellt. Berechne den Streifenabstand Δx.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>Δx = λL/d = (532 · 10⁻⁹ m · 3,00 m) / (0,20 · 10⁻³ m) = 7,98 · 10⁻³ m ≈ <strong>8,0 mm</strong>.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-3">Transfer</span>
+    <h4>3. Große Winkel — Kleinwinkelnäherung prüfen</h4>
+    <p>An einem Gitter mit Gitterkonstante g = 1/500 mm wird auf einem Schirm im Abstand L = 2,00 m das erste Nebenmaximum bei x₁ = 65 cm vom Hauptmaximum entfernt gemessen. Prüfe, ob die Kleinwinkelnäherung (sinθ ≈ tanθ) hier noch zulässig ist, und bestimme die Wellenlänge korrekt.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>g = 1/500 mm = 2000 nm. tanθ = x₁/L = 0,65/2,00 = 0,325 ⟹ θ ≈ 18,0°. Das ist kein kleiner Winkel mehr (Kleinwinkelnäherung wäre hier ungenau) — es muss mit sinθ statt tanθ gerechnet werden: sinθ ≈ sin(18,0°) ≈ 0,309.</p>
+        <p>Aus g·sinθ = k·λ (k = 1): λ = g·sinθ = 2000 nm · 0,309 ≈ <strong>618 nm</strong> (oranges Licht).</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Photoeffekt</h2>
+
+  <div class="task">
+    <span class="tier-badge tier-1">Grundlagen</span>
+    <h4>1. Rolle von Intensität und Frequenz</h4>
+    <p>Erkläre, warum eine Erhöhung der Lichtintensität bei fester Frequenz die maximale kinetische Energie der Photoelektronen <em>nicht</em> erhöht, wohl aber ihre Anzahl.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>Jedes Photon überträgt seine Energie E = h·f einzeln an genau ein Elektron. Eine höhere Intensität bedeutet mehr Photonen pro Zeiteinheit — also mehr ausgelöste Elektronen (höherer Photostrom). Die Energie jedes einzelnen Photons und damit die maximale kinetische Energie der Elektronen hängt aber nur von der Frequenz f ab, nicht von der Anzahl der Photonen.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-2">Anwendung</span>
+    <h4>2. Maximale kinetische Energie berechnen</h4>
+    <p>Eine Kathode mit Austrittsarbeit W<sub>A</sub> = 2,3 eV wird mit Licht der Wellenlänge λ = 380 nm bestrahlt. Berechne die maximale kinetische Energie der Photoelektronen (in eV) und die Grenzspannung U<sub>grenz</sub>.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>f = c/λ = (3,00·10⁸ m/s)/(380·10⁻⁹ m) ≈ 7,89·10¹⁴ Hz.</p>
+        <p>E<sub>Photon</sub> = h·f ≈ 6,626·10⁻³⁴ Js · 7,89·10¹⁴ Hz ≈ 5,23·10⁻¹⁹ J ≈ 3,27 eV.</p>
+        <p>E<sub>kin,max</sub> = E<sub>Photon</sub> − W<sub>A</sub> ≈ 3,27 eV − 2,3 eV ≈ <strong>0,97 eV</strong>, also U<sub>grenz</sub> ≈ <strong>0,97 V</strong>.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-3">Transfer</span>
+    <h4>3. h und W<sub>A</sub> aus einer Messreihe bestimmen</h4>
+    <p>Bei einer unbekannten Kathode ergaben sich die Messwerte (f | U<sub>grenz</sub>): (6,0·10¹⁴ Hz | 0,15 V) und (9,0·10¹⁴ Hz | 1,50 V). Bestimme daraus das Planck’sche Wirkungsquantum h und die Austrittsarbeit W<sub>A</sub>. Vergleiche h mit dem Literaturwert und diskutiere mögliche Fehlerursachen.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>Steigung: m = ΔU/Δf = (1,50 V − 0,15 V)/(9,0·10¹⁴ Hz − 6,0·10¹⁴ Hz) = 1,35/(3,0·10¹⁴) ≈ 4,5·10⁻¹⁵ V·s.</p>
+        <p>h = m·e ≈ 4,5·10⁻¹⁵ V·s · 1,602·10⁻¹⁹ C ≈ <strong>7,2·10⁻³⁴ J·s</strong> (Literaturwert: 6,63·10⁻³⁴ J·s, Abweichung ≈ 9 %).</p>
+        <p>Achsenabschnitt: b = U − m·f = 0,15 V − 4,5·10⁻¹⁵ V·s · 6,0·10¹⁴ Hz = −2,55 V ⟹ W<sub>A</sub> ≈ <strong>2,55 eV</strong>.</p>
+        <p>Mögliche Fehlerquellen: Ablesegenauigkeit von U<sub>grenz</sub> (Bestimmung des Stromnulldurchgangs ist unscharf), nur zwei Messpunkte (keine Mittelung über eine ganze Ausgleichsgerade), Kontaktpotentiale in der Apparatur.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Millikan-Versuch</h2>
+
+  <div class="task">
+    <span class="tier-badge tier-1">Grundlagen</span>
+    <h4>1. Prinzip der Schwebefeldmethode</h4>
+    <p>Welche zwei Kräfte müssen sich beim schwebenden Öltröpfchen die Waage halten? Leite daraus die Formel für die Ladung q her.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>Gewichtskraft F<sub>G</sub> = m·g (nach unten) und elektrische Kraft F<sub>el</sub> = q·E = q·U/d (nach oben, bei passender Polung). Im Schwebezustand gilt F<sub>G</sub> = F<sub>el</sub>: m·g = q·U/d ⟹ <strong>q = m·g·d / U</strong>.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-2">Anwendung</span>
+    <h4>2. Ladung und Elementarladungszahl</h4>
+    <p>Ein Öltröpfchen der Masse m = 8,57 · 10⁻¹⁵ kg schwebt bei U = 350 V zwischen Platten im Abstand d = 2,00 mm. Berechne die Ladung q und die Anzahl n der Elementarladungen (e = 1,60 · 10⁻¹⁹ C).</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>q = m·g·d/U = (8,57·10⁻¹⁵ kg · 9,81 m/s² · 2,00·10⁻³ m) / 350 V ≈ 4,80·10⁻¹⁹ C.</p>
+        <p>n = q/e ≈ 4,80·10⁻¹⁹ C / 1,60·10⁻¹⁹ C ≈ <strong>3</strong>. Das Tröpfchen trägt drei Elementarladungen.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-3">Transfer</span>
+    <h4>3. Elementarladung aus mehreren Tröpfchen</h4>
+    <p>Bei fünf Tröpfchen wurden folgende Ladungen bestimmt (in 10⁻¹⁹ C): 3,2 / 8,0 / 4,9 / 6,4 / 1,7. Bestimme daraus einen Schätzwert für die Elementarladung e und diskutiere kurz mögliche Messunsicherheiten.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>Teilt man jeden Wert durch eine passende ganze Zahl, ergibt sich immer etwa derselbe Wert:
+        1,7/1 ≈ 1,70; 3,2/2 ≈ 1,60; 4,9/3 ≈ 1,63; 6,4/4 ≈ 1,60; 8,0/5 ≈ 1,60 (jeweils in 10⁻¹⁹ C).</p>
+        <p>Schätzwert: e ≈ <strong>1,6 · 10⁻¹⁹ C</strong> (Literaturwert: 1,602 · 10⁻¹⁹ C).</p>
+        <p>Messunsicherheiten: Ablesegenauigkeit der Schwebespannung, Schwankungen der Tröpfchengröße/-masse, Luftströmungen im Kondensator, geringe Anzahl an Tröpfchen für eine statistisch sichere Aussage.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Fadenstrahlrohr</h2>
+
+  <div class="task">
+    <span class="tier-badge tier-1">Grundlagen</span>
+    <h4>1. Kreisbahn im Magnetfeld</h4>
+    <p>Erkläre, warum sich Elektronen im Fadenstrahlrohr auf einer Kreisbahn bewegen. Welche Kraft übernimmt die Rolle der Zentripetalkraft?</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>Die Lorentzkraft F = e·v·B steht senkrecht zur Bewegungsrichtung der Elektronen und wirkt deshalb als Zentripetalkraft: e·v·B = m·v²/r ⟹ r = m·v/(e·B). Da die Kraft stets senkrecht zur Geschwindigkeit steht, verrichtet sie keine Arbeit — der Betrag der Geschwindigkeit bleibt konstant, es entsteht eine Kreisbahn.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-2">Anwendung</span>
+    <h4>2. e/m aus einer Einzelmessung</h4>
+    <p>Bei U = 200 V und B = 1,00 mT wird ein Bahnradius r = 4,77 cm gemessen. Berechne die spezifische Ladung e/m.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>Aus r = √(2Um/e)/B folgt e/m = 2U/(r²·B²).</p>
+        <p>e/m = (2 · 200 V) / ((0,0477 m)² · (0,00100 T)²) = 400 / (2,275·10⁻³ · 1,00·10⁻⁶) ≈ <strong>1,76 · 10¹¹ C/kg</strong> — sehr nah am Literaturwert (1,7588 · 10¹¹ C/kg).</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-3">Transfer</span>
+    <h4>3. Auswertung einer Messreihe (r² über U)</h4>
+    <p>Bei konstantem Spulenstrom (B = 1,00 mT) wurden folgende Werte gemessen: (U in V | r in cm): (100 | 3,37), (200 | 4,77), (300 | 5,84), (400 | 6,75). Bestimme e/m grafisch/rechnerisch über eine Auftragung von r² gegen U.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>r² (in cm²): 11,36 / 22,75 / 34,11 / 45,56.</p>
+        <p>Steigung (aus erstem und letztem Punkt): m<sub>Fit</sub> = (45,56 − 11,36) cm² / (400 − 100) V ≈ 0,114 cm²/V = 1,14·10⁻⁵ m²/V.</p>
+        <p>e/m = 2/(m<sub>Fit</sub>·B²) = 2/(1,14·10⁻⁵ m²/V · (1,00·10⁻³ T)²) ≈ <strong>1,75 · 10¹¹ C/kg</strong> — passt sehr gut zum Literaturwert.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Elektronenbeugung</h2>
+
+  <div class="task">
+    <span class="tier-badge tier-1">Grundlagen</span>
+    <h4>1. Die de-Broglie-Hypothese</h4>
+    <p>Erkläre die de-Broglie-Hypothese und gib die Formel für die Wellenlänge eines mit der Spannung U beschleunigten Elektrons an.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>De Broglie postulierte, dass jedem Teilchen mit Impuls p eine Wellenlänge λ = h/p zugeordnet werden kann — nicht nur Photonen, sondern auch massebehafteten Teilchen wie Elektronen.</p>
+        <p>Für ein mit U beschleunigtes Elektron gilt E<sub>kin</sub> = e·U = p²/(2m) ⟹ p = √(2·m·e·U), also <strong>λ = h / √(2·m·e·U)</strong>.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-2">Anwendung</span>
+    <h4>2. Wellenlänge berechnen</h4>
+    <p>Berechne die de-Broglie-Wellenlänge eines Elektrons, das mit U = 5,00 kV beschleunigt wurde.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>λ = h/√(2·m<sub>e</sub>·e·U) = 6,626·10⁻³⁴ Js / √(2 · 9,109·10⁻³¹ kg · 1,602·10⁻¹⁹ C · 5000 V)</p>
+        <p>= 6,626·10⁻³⁴ / 3,82·10⁻²³ ≈ <strong>1,74 · 10⁻¹¹ m ≈ 17,4 pm</strong>.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-3">Transfer</span>
+    <h4>3. Theorie und Messung vergleichen</h4>
+    <p>Eine Elektronenbeugungsröhre hat Netzebenenabstand d = 2,13 · 10⁻¹⁰ m und Röhrenlänge L = 13,5 cm. Bei U = 3,50 kV wird ein Ringdurchmesser D<sub>gemessen</sub> = 2,85 cm gemessen. Berechne den nach der de-Broglie-Hypothese erwarteten Durchmesser D<sub>theo</sub> (über D = 2Lλ/d) und die relative Abweichung zur Messung.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>λ(3500 V) = h/√(2·m<sub>e</sub>·e·U) ≈ 2,07 · 10⁻¹¹ m.</p>
+        <p>D<sub>theo</sub> = 2·L·λ/d = (2 · 0,135 m · 2,07·10⁻¹¹ m) / (2,13·10⁻¹⁰ m) ≈ 2,63 · 10⁻² m ≈ <strong>2,63 cm</strong>.</p>
+        <p>Relative Abweichung: (2,85 − 2,63)/2,63 ≈ <strong>8,4 %</strong> — im Rahmen der Ablesegenauigkeit an einem Leuchtschirm ein plausibler Wert, der die de-Broglie-Hypothese gut bestätigt.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Licht und Materie</h2>
+
+  <div class="task">
+    <span class="tier-badge tier-1">Grundlagen</span>
+    <h4>1. Wellenmodell vs. Wahrscheinlichkeitsinterpretation</h4>
+    <p>Erkläre den Unterschied zwischen den Aussagen „Licht ist eine Welle“ und „Licht zeigt beim Nachweis Teilchencharakter, aber die Wahrscheinlichkeit für den Nachweisort folgt einer Wellengleichung“.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>„Licht ist eine Welle“ beschreibt das klassische Wellenmodell, bei dem eine kontinuierliche Energie- bzw. Materieverteilung im Raum schwingt. Der moderne quantenmechanische Blick sagt dagegen: Beim <em>Nachweis</em> (z. B. auf einem Schirm) wird immer nur ein einzelnes, punktförmiges Ereignis registriert (Teilchencharakter). Wiederholt man das Experiment sehr oft, verteilen sich diese Einzelereignisse aber gemäß einer Wahrscheinlichkeitsverteilung, die durch eine wellenartige Größe (das Betragsquadrat der Wellenfunktion) bestimmt ist. Die „Welle“ beschreibt also nicht direkt eine physikalische Schwingung im Raum, sondern eine Wahrscheinlichkeit.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-2">Anwendung</span>
+    <h4>2. Welcher-Weg-Information</h4>
+    <p>Bei einem Doppelspaltexperiment mit einzelnen Elektronen verschwindet das Interferenzmuster, sobald ein Detektor feststellt, durch welchen Spalt jedes Elektron fliegt. Erkläre dieses Phänomen mithilfe der Kopenhagener Deutung.</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>Solange nicht gemessen wird, durch welchen Spalt das Elektron läuft, befindet es sich in einer Überlagerung (Superposition) beider Möglichkeiten, und die zugehörigen „Wahrscheinlichkeitswellen“ beider Wege interferieren miteinander — es entsteht ein Interferenzmuster. Wird der Weg jedoch gemessen (Welcher-Weg-Information), „entscheidet“ diese Messung den Weg des Elektrons — die Superposition bricht zusammen. Jedes Elektron verhält sich dann so, als sei es nur durch einen bestimmten Spalt gelaufen; die beiden möglichen Wege interferieren nicht mehr miteinander. Das resultierende Muster ist dann einfach die Summe zweier Einzelspaltmuster, ohne Interferenzstreifen.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="task">
+    <span class="tier-badge tier-3">Transfer</span>
+    <h4>3. Diskussion: Grenzen klassischer Modelle</h4>
+    <p>Diskutiere, inwiefern der Welle-Teilchen-Dualismus die Grenzen klassischer Modelle aufzeigt. Warum lassen sich Quantenobjekte nicht einfach als „kleine Bälle“ oder „kleine Wasserwellen“ verstehen?</p>
+    <details class="solution">
+      <summary>Lösung anzeigen</summary>
+      <div class="solution-body">
+        <p>Musterlösung (Kernpunkte, offene Diskussionsaufgabe): Klassische Bälle hätten zu jedem Zeitpunkt einen wohldefinierten Ort und eine wohldefinierte Bahn — sie könnten kein Interferenzmuster erzeugen, da sie nur durch <em>einen</em> Spalt fliegen. Klassische Wasserwellen sind dagegen kontinuierlich im Raum ausgedehnt und würden nie als einzelner, punktförmiger „Klick“ auf einem Detektor registriert. Quantenobjekte zeigen <em>je nach Experiment</em> Aspekte von beidem: einzelne, diskrete Nachweisereignisse (teilchenartig) <em>und</em> eine wellenartige Wahrscheinlichkeitsverteilung dieser Ereignisse (wellenartig). Keines der beiden klassischen Modelle allein beschreibt das vollständige Verhalten — sie sind jeweils nur Grenzfälle bzw. nützliche Analogien für bestimmte Aspekte, aber keine vollständige Beschreibung der zugrunde liegenden Quantenrealität.</p>
+      </div>
+    </details>
+  </div>
+
+  <p class="center-note">Zurück zur <a href="/themen/quantenobjekte/index.html">Themenübersicht Quantenobjekte</a></p>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Aufgaben Quantenobjekte</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+
+</body>
+</html>

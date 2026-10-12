@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photoeffekt — Quantenobjekte — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <span>Photoeffekt</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Erforschung des Photons</div>
+    <div class="leitfrage">Wie kann das Verhalten von Licht beschrieben und erklärt werden?</div>
+    <div class="schwerpunkte">Photoeffekt · Hallwachsversuch · Vakuumphotozelle</div>
+  </div>
+
+  <h1>Photoeffekt</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    Licht trifft auf eine Metallkathode in einer Vakuumphotozelle und löst Elektronen heraus. Eine
+    Gegenspannung <em>U</em> bremst diese Elektronen ab. Finde für verschiedene Lichtfrequenzen <em>f</em>
+    die Grenzspannung <em>U<sub>grenz</sub></em>, bei der der Photostrom gerade zum Erliegen kommt.
+  </p>
+
+  <div class="sim-layout">
+    <div class="panel">
+      <h3>Licht &amp; Gegenspannung einstellen</h3>
+
+      <div class="control">
+        <label>Lichtfarbe</label>
+        <div class="pill-row" id="colorButtons"></div>
+      </div>
+
+      <div class="control">
+        <label>Wellenlänge λ <span class="val" id="lambdaVal">450 nm</span></label>
+        <input type="range" id="lambdaSlider" min="200" max="700" value="450" step="5">
+        <div class="hint" id="freqReadout"></div>
+      </div>
+
+      <div class="control">
+        <label>Gegenspannung U <span class="val" id="uVal">0,00 V</span></label>
+        <input type="range" id="uSlider" min="0" max="300" value="0" step="1">
+        <div class="hint">Erhöhe U, bis der Photostrom gerade auf 0 sinkt.</div>
+      </div>
+
+      <div class="control">
+        <label>Lichtintensität <span class="val" id="iVal">mittel</span></label>
+        <input type="range" id="intensitySlider" min="1" max="8" value="4" step="1">
+        <div class="hint">Ändert nur die Elektronenzahl (Stromstärke), nicht die Grenzspannung!</div>
+      </div>
+
+      <div class="readout"><span class="k">Photostrom</span><span class="v" id="currentReadout">–</span></div>
+
+      <div class="control-row" style="margin-top:12px;">
+        <button class="btn btn-primary" id="btnMessen">📏 U<sub>grenz</sub> messen</button>
+        <button class="btn btn-secondary" id="btnReset">Tabelle leeren</button>
+      </div>
+      <div class="info-note" id="warnBox" style="display:none; color:var(--rose);"></div>
+      <div class="info-note">Austrittsarbeit der Kathode: unbekannt — das sollst du aus dem Diagramm bestimmen.</div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <canvas id="stage" width="640" height="300"></canvas>
+        <div class="stage-caption">Vakuumphotozelle: Kathode (links, beleuchtet) → Anode (rechts). Elektronen mit zu wenig Energie fallen zurück.</div>
+      </div>
+
+      <div class="data-panel">
+        <h3>Messwerttabelle</h3>
+        <div id="tableHost"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:var(--accent)"></span>U<sub>grenz</sub> über f</span>
+          <span><span class="dot" style="background:var(--teal)"></span>Ausgleichsgerade</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">e · U<sub>grenz</sub> = h·f − W<sub>A</sub></div>
+    <p>Die Steigung der Geraden U<sub>grenz</sub>(f) ist h/e (daraus folgt das Planck’sche Wirkungsquantum h). Der
+    y-Achsenabschnitt (in Volt) entspricht direkt der Austrittsarbeit in Elektronenvolt.</p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Quantenobjekte · Erforschung des Photons</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/chart.js"></script>
+<script>
+(function () {
+  const W_A_eV = 2.30; // Austrittsarbeit der (fiktiven) Kathode
+  const W_A_J = W_A_eV * PHYS.e;
+  const f0 = W_A_J / PHYS.h;
+
+  const COLORS = [
+    { name: "UV", nm: 260 },
+    { name: "Violett", nm: 400 },
+    { name: "Blau", nm: 450 },
+    { name: "Grün", nm: 520 },
+    { name: "Gelb", nm: 580 },
+    { name: "Rot", nm: 650 },
+  ];
+
+  let lambdaNm = 450;
+  let U_V = 0;
+  let intensity = 4;
+  let particles = [];
+  let recent = []; // {t, hit:bool}
+
+  const canvas = qs("#stage");
+  const ctx = canvas.getContext("2d");
+
+  function freqOf(nm) { return PHYS.c / (nm * 1e-9); }
+
+  function EkinMax_J(nm) {
+    const f = freqOf(nm);
+    return Math.max(0, PHYS.h * f - W_A_J);
+  }
+  function Ugrenz_true(nm) {
+    return EkinMax_J(nm) / PHYS.e;
+  }
+
+  function setupColorButtons() {
+    const host = qs("#colorButtons");
+    COLORS.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "pill";
+      btn.style.cursor = "pointer";
+      btn.textContent = c.name;
+      btn.dataset.nm = c.nm;
+      btn.addEventListener("click", () => {
+        lambdaNm = c.nm;
+        qs("#lambdaSlider").value = c.nm;
+        onLambdaChange();
+      });
+      host.appendChild(btn);
+    });
+    updateActiveColor();
+  }
+  function updateActiveColor() {
+    qsa("#colorButtons .pill").forEach(b => {
+      const active = Math.abs(Number(b.dataset.nm) - lambdaNm) < 3;
+      b.style.background = active ? wavelengthToRGB(lambdaNm) : "";
+      b.style.color = active ? "#fff" : "";
+      b.style.fontWeight = active ? "700" : "400";
+    });
+  }
+
+  function onLambdaChange() {
+    lambdaNm = Number(qs("#lambdaSlider").value);
+    qs("#lambdaVal").textContent = `${lambdaNm} nm`;
+    updateActiveColor();
+    const f = freqOf(lambdaNm);
+    qs("#freqReadout").textContent = `f = ${fmtSci(f, 3)} Hz` + (f < f0 ? "  ·  unterhalb der Grenzfrequenz: kein Photoeffekt!" : "");
+    particles = [];
+  }
+
+  function onUChange() {
+    U_V = Number(qs("#uSlider").value) / 100;
+    qs("#uVal").textContent = `${fmt(U_V, 2)} V`;
+  }
+
+  qs("#lambdaSlider").addEventListener("input", onLambdaChange);
+  qs("#uSlider").addEventListener("input", onUChange);
+  qs("#intensitySlider").addEventListener("input", e => {
+    intensity = Number(e.target.value);
+    const labels = ["sehr schwach", "schwach", "schwach", "mittel", "mittel", "stark", "stark", "sehr stark"];
+    qs("#iVal").textContent = labels[intensity - 1] || "mittel";
+  });
+
+  function resizeCanvasForCSS() {
+    const cssW = canvas.parentElement.clientWidth - 32;
+    const cssH = 260;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssW, h: cssH };
+  }
+
+  let lastSpawn = 0;
+  function step(ts) {
+    const { w, h } = resizeCanvasForCSS();
+    ctx.fillStyle = "#0a0a0f";
+    ctx.fillRect(0, 0, w, h);
+
+    const plateX0 = 70, plateX1 = w - 70;
+    const gap = plateX1 - plateX0;
+
+    // Kathode (beleuchtet)
+    const rgb = wavelengthToRGB(lambdaNm);
+    ctx.fillStyle = rgb;
+    ctx.globalAlpha = 0.85;
+    ctx.fillRect(plateX0 - 14, 20, 8, h - 40);
+    ctx.globalAlpha = 1;
+    // Lichtstrahlen andeuten
+    for (let i = 0; i < 5; i++) {
+      ctx.strokeStyle = rgb;
+      ctx.globalAlpha = 0.35;
+      ctx.beginPath();
+      ctx.moveTo(plateX0 - 60, 30 + i * (h - 60) / 4 - 10);
+      ctx.lineTo(plateX0 - 14, 30 + i * (h - 60) / 4);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // Anode
+    ctx.fillStyle = "#9aa1b1";
+    ctx.fillRect(plateX1 + 6, 20, 8, h - 40);
+
+    ctx.fillStyle = "#c7cbe0";
+    ctx.font = "12px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("Kathode", plateX0 - 10, h - 12);
+    ctx.fillText("Anode", plateX1 + 10, h - 12);
+
+    const EkinMax = EkinMax_J(lambdaNm);
+    const Ug = Ugrenz_true(lambdaNm);
+
+    // Teilchen spawnen
+    if (EkinMax > 0 && ts - lastSpawn > 480 / intensity) {
+      lastSpawn = ts;
+      const u = Math.random(); // Anteil der maximalen Energie
+      const vmax = 5.2;
+      particles.push({ x: plateX0, y: 30 + Math.random() * (h - 60), v: vmax * Math.sqrt(u), u });
+    }
+
+    const vmax = 5.2;
+    const a = Ug > 0 ? (U_V / Ug) * (vmax * vmax) / (2 * gap) : 0;
+    let hitsRecent = 0, spawnedRecent = 0;
+    const now = ts;
+    particles.forEach(p => {
+      p.v -= a;
+      p.x += p.v;
+    });
+    particles = particles.filter(p => {
+      if (p.x >= plateX1) { recent.push({ t: now, hit: true }); return false; }
+      if (p.x <= plateX0 - 4 && p.v < 0) { recent.push({ t: now, hit: false }); return false; }
+      return true;
+    });
+    recent = recent.filter(r => now - r.t < 1500);
+
+    // draw particles
+    ctx.fillStyle = "#ffe27a";
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Strommesser
+    const fracTrue = EkinMax <= 0 ? 0 : Math.max(0, Math.min(1, 1 - U_V / Ug));
+    const pct = Math.round(fracTrue * 100);
+    qs("#currentReadout").textContent = EkinMax <= 0 ? "0 % (f < Grenzfrequenz)" : `${pct} %`;
+
+    requestAnimationFrame(step);
+  }
+
+  qs("#btnMessen").addEventListener("click", () => {
+    const EkinMax = EkinMax_J(lambdaNm);
+    const Ug = Ugrenz_true(lambdaNm);
+    const warnBox = qs("#warnBox");
+    if (EkinMax <= 0) {
+      warnBox.style.display = "block";
+      warnBox.textContent = "Bei dieser Frequenz tritt gar kein Photoeffekt auf (f liegt unterhalb der Grenzfrequenz) — es gibt keine Grenzspannung zu messen.";
+      return;
+    }
+    const frac = Math.max(0, Math.min(1, 1 - U_V / Ug));
+    if (frac > 0.04) {
+      warnBox.style.display = "block";
+      warnBox.textContent = `Der Photostrom ist noch nicht ganz Null (≈ ${Math.round(frac * 100)} %). Erhöhe die Gegenspannung weiter.`;
+      return;
+    }
+    warnBox.style.display = "none";
+    const noisy = U_V * (1 + (Math.random() - 0.5) * 0.04);
+    table.addRow({ f: freqOf(lambdaNm), Ug: noisy });
+  });
+  qs("#btnReset").addEventListener("click", () => table.clear());
+
+  const table = new DataTable(qs("#tableHost"), [
+    { key: "f", label: "f", unit: "Hz", sci: true, decimals: 3 },
+    { key: "Ug", label: "U grenz", unit: "V", decimals: 2 },
+  ], {
+    onChange: rows => chart.setPoints(rows.map(r => ({ x: r.f, y: r.Ug })))
+  });
+
+  const chart = new ScatterChart(qs("#chart"), {
+    xLabel: "f", yLabel: "U grenz", xUnit: "Hz", yUnit: "V",
+    showRegression: true, minPointsForFit: 2
+  });
+
+  setupColorButtons();
+  onLambdaChange();
+  onUChange();
+  step(performance.now());
+
+  new StepGuide(qs("#stepguide"), {
+    title: "Geführte Auswertung: Von U(f) zu h und zur Austrittsarbeit",
+    intro: "Miss U_grenz für mindestens 4 verschiedene Frequenzen oberhalb der Grenzfrequenz (z. B. UV, Violett, Blau, Grün).",
+    steps: [
+      {
+        title: "Beobachtung",
+        body: "<p>Stelle Rot oder Gelb ein und erhöhe die Gegenspannung. Was passiert? Stelle danach Blau oder UV ein — was ändert sich?</p>",
+        note: true,
+        notePlaceholder: "Deine Beobachtung…",
+      },
+      {
+        title: "Rolle der Intensität",
+        body: "<p>Erhöhe bei gleicher Farbe die Lichtintensität. Ändert sich die Grenzspannung, bei der der Strom auf 0 sinkt?</p>",
+        reveal: "<p>Nein — die Intensität beeinflusst nur, <strong>wie viele</strong> Elektronen pro Sekunde ausgelöst werden (Stromstärke), nicht ihre <strong>maximale Energie</strong>. Das ist der Kern des Photoeffekts: Energie hängt nur von der Frequenz ab, nicht von der Helligkeit — ein Rätsel für die klassische Wellentheorie des Lichts, gelöst durch Einsteins Lichtquantenhypothese.</p>",
+        revealLabel: "Bedeutung",
+      },
+      {
+        title: "Messreihe aufnehmen",
+        body: "<p>Miss U_grenz für mindestens 4 Frequenzen oberhalb der Grenzfrequenz und trage sie in die Tabelle ein.</p>",
+        hint: "<p>Erhöhe U langsam, bis die Anzeige „Photostrom“ auf 0 % steht, dann erst „U_grenz messen“ klicken.</p>",
+      },
+      {
+        title: "Steigung → Wirkungsquantum h",
+        body: "<p>Die Gerade U_grenz(f) hat die Gleichung U_grenz = (h/e)·f − W_A/e. Lies die Steigung m aus deinem Diagramm ab und berechne h = m·e.</p>",
+        reveal: `<p>Literaturwert: h ≈ ${fmtSci(PHYS.h, 3)} J·s. Wie nah kommst du mit deiner Messreihe heran?</p>`,
+        revealLabel: "Vergleichswert",
+      },
+      {
+        title: "Achsenabschnitt → Austrittsarbeit",
+        body: "<p>Verlängere die Ausgleichsgerade gedanklich bis zur y-Achse (f = 0). Der Achsenabschnitt (in Volt, auch wenn negativ) entspricht zahlenmäßig der Austrittsarbeit W_A in Elektronenvolt (eV).</p>",
+        note: true,
+        notePlaceholder: "Meine bestimmte Austrittsarbeit W_A ≈ … eV",
+        reveal: "<p>Je nach Kathodenmaterial liegen typische Austrittsarbeiten zwischen ca. 2 eV (Alkalimetalle wie Kalium, Natrium) und über 5 eV (Platin). Vergleiche dein Ergebnis mit solchen Tabellenwerten.</p>",
+        revealLabel: "Einordnung",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>

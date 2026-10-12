@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Standardmodell &amp; Kernphysik — Strahlung und Materie — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <a href="/themen/strahlung-materie/index.html">Strahlung und Materie</a><span class="sep">›</span>
+    <span>Standardmodell &amp; Kernphysik</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Forschung am CERN und DESY</div>
+    <div class="leitfrage">Was sind die kleinsten Bausteine der Materie?</div>
+    <div class="schwerpunkte">Standardmodell der Elementarteilchen · Kernfusion/-spaltung · Austauschteilchen</div>
+  </div>
+
+  <h1>Das Standardmodell und der Aufbau der Kerne</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    Für diesen Bereich gibt es an der Schule keine Realexperimente — die Erkenntnisse stammen aus Anlagen wie
+    dem CERN oder DESY. Erkunde stattdessen die Teilchentafel und die Bindungsenergiekurve interaktiv.
+  </p>
+
+  <section class="section-block">
+    <h2>Die Bausteine der Materie</h2>
+    <div class="two-col" style="align-items:start;">
+      <div>
+        <h3 style="margin-top:0;">Quarks</h3>
+        <div class="pill-row" id="quarkGrid"></div>
+        <h3>Leptonen</h3>
+        <div class="pill-row" id="leptonGrid"></div>
+        <h3>Austauschteilchen (Bosonen)</h3>
+        <div class="pill-row" id="bosonGrid"></div>
+      </div>
+      <div class="panel" id="detailPanel">
+        <h3>Teilchen auswählen</h3>
+        <p style="color:var(--text-muted);">Klicke auf ein Teilchen, um mehr zu erfahren.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-block">
+    <h2>Bindungsenergie pro Nukleon</h2>
+    <p style="color:var(--text-muted); max-width:70ch;">
+      Diese Kurve ist der Schlüssel zu Kernfusion und Kernspaltung: Sowohl die Verschmelzung leichter Kerne
+      (Fusion) als auch die Spaltung schwerer Kerne (Spaltung) bewegt die Nukleonen hin zum Maximum bei Eisen
+      (Fe-56) — und setzt dabei Energie frei.
+    </p>
+    <div class="chart-wrap">
+      <canvas id="bindingChart" width="640" height="320"></canvas>
+    </div>
+  </section>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">E<sub>B</sub> = Δm · c² &nbsp;&nbsp;(Massendefekt → Bindungsenergie)</div>
+    <p>Sowohl bei der Kernfusion (leichte Kerne) als auch bei der Kernspaltung (schwere Kerne) ist die
+    Bindungsenergie pro Nukleon der Produkte größer als die der Ausgangskerne — die Differenz wird als Energie
+    frei.</p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Strahlung und Materie · Forschung am CERN und DESY</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script>
+(function () {
+  const QUARKS = [
+    { sym: "u", name: "Up-Quark", charge: "+2/3 e", mass: "≈ 2,2 MeV/c²", info: "Bestandteil von Proton und Neutron. Zusammen mit dem Down-Quark der leichteste und stabilste Quark-Typ." },
+    { sym: "d", name: "Down-Quark", charge: "−1/3 e", mass: "≈ 4,7 MeV/c²", info: "Bestandteil von Proton und Neutron. Proton = uud, Neutron = udd." },
+    { sym: "c", name: "Charm-Quark", charge: "+2/3 e", mass: "≈ 1,27 GeV/c²", info: "Deutlich schwerer als u/d, kommt nur in instabilen Teilchen vor (z. B. bei Teilchenkollisionen erzeugt)." },
+    { sym: "s", name: "Strange-Quark", charge: "−1/3 e", mass: "≈ 95 MeV/c²", info: "Namensgebend für 'seltsame' (strange) Teilchen wie Kaonen." },
+    { sym: "t", name: "Top-Quark", charge: "+2/3 e", mass: "≈ 173 GeV/c²", info: "Das schwerste bekannte Elementarteilchen — fast so schwer wie ein Goldatom, aber punktförmig! 2012 am LHC (CERN) präzise vermessen." },
+    { sym: "b", name: "Bottom-Quark", charge: "−1/3 e", mass: "≈ 4,18 GeV/c²", info: "Wichtig für die Erforschung der Materie-Antimaterie-Asymmetrie (CP-Verletzung)." },
+  ];
+  const LEPTONS = [
+    { sym: "e⁻", name: "Elektron", charge: "−1 e", mass: "0,511 MeV/c²", info: "Bestandteil der Atomhülle. Stabil." },
+    { sym: "νe", name: "Elektron-Neutrino", charge: "0", mass: "≈ 0 (sehr klein)", info: "Extrem leicht und fast wechselwirkungsfrei — durchquert Materie fast ungehindert. Entsteht z. B. beim β-Zerfall." },
+    { sym: "μ⁻", name: "Myon", charge: "−1 e", mass: "105,7 MeV/c²", info: "Ein 'schweres Elektron', instabil (Lebensdauer ≈ 2,2 µs). Entsteht u. a. beim Zerfall kosmischer Strahlung in der Atmosphäre (Myonenzerfall, Relativitätstheorie!)." },
+    { sym: "νμ", name: "Myon-Neutrino", charge: "0", mass: "≈ 0 (sehr klein)", info: "Begleitet das Myon bei schwachen Wechselwirkungen." },
+    { sym: "τ⁻", name: "Tau", charge: "−1 e", mass: "1777 MeV/c²", info: "Das schwerste geladene Lepton, sehr kurzlebig." },
+    { sym: "ντ", name: "Tau-Neutrino", charge: "0", mass: "≈ 0 (sehr klein)", info: "Zuletzt entdeckter der drei Neutrino-Typen (2000, DONUT-Experiment)." },
+  ];
+  const BOSONS = [
+    { sym: "γ", name: "Photon", charge: "0", mass: "0", info: "Austauschteilchen der elektromagnetischen Wechselwirkung — vermittelt die Kraft zwischen geladenen Teilchen (vgl. Photoeffekt, Lichtquant)." },
+    { sym: "g", name: "Gluon", charge: "0", mass: "0", info: "Austauschteilchen der starken Wechselwirkung — hält Quarks im Proton/Neutron zusammen." },
+    { sym: "W±", name: "W-Boson", charge: "±1 e", mass: "80,4 GeV/c²", info: "Austauschteilchen der schwachen Wechselwirkung — verantwortlich für den β-Zerfall (n → p + e⁻ + ν̄e)." },
+    { sym: "Z⁰", name: "Z-Boson", charge: "0", mass: "91,2 GeV/c²", info: "Weiteres Austauschteilchen der schwachen Wechselwirkung, ungeladen." },
+    { sym: "H⁰", name: "Higgs-Boson", charge: "0", mass: "125 GeV/c²", info: "Verantwortlich für den Mechanismus, durch den Elementarteilchen überhaupt Masse erhalten. 2012 am CERN entdeckt." },
+  ];
+
+  function buildGrid(hostId, items, color) {
+    const host = qs(hostId);
+    items.forEach(p => {
+      const btn = document.createElement("button");
+      btn.className = "pill";
+      btn.style.cursor = "pointer";
+      btn.style.fontFamily = "var(--font-mono)";
+      btn.textContent = p.sym;
+      btn.addEventListener("click", () => showDetail(p, color));
+      host.appendChild(btn);
+    });
+  }
+  function showDetail(p, color) {
+    qs("#detailPanel").innerHTML = `
+      <h3 style="color:${color}; font-family:var(--font-mono);">${p.sym} — ${p.name}</h3>
+      <div class="readout"><span class="k">Ladung</span><span class="v">${p.charge}</span></div>
+      <div class="readout"><span class="k">Masse</span><span class="v">${p.mass}</span></div>
+      <p style="margin-top:12px;">${p.info}</p>
+    `;
+  }
+
+  buildGrid("#quarkGrid", QUARKS, "var(--accent)");
+  buildGrid("#leptonGrid", LEPTONS, "var(--teal)");
+  buildGrid("#bosonGrid", BOSONS, "var(--amber)");
+
+  // Bindungsenergiekurve
+  const NUCLIDES = [
+    { A: 2, sym: "²H", E: 1.11 },
+    { A: 4, sym: "⁴He", E: 7.07 },
+    { A: 7, sym: "⁷Li", E: 5.61 },
+    { A: 12, sym: "¹²C", E: 7.68 },
+    { A: 16, sym: "¹⁶O", E: 7.98 },
+    { A: 56, sym: "⁵⁶Fe", E: 8.79 },
+    { A: 92, sym: "⁹²Kr", E: 8.66 },
+    { A: 120, sym: "¹²⁰Sn", E: 8.50 },
+    { A: 140, sym: "¹⁴⁰Xe", E: 8.29 },
+    { A: 208, sym: "²⁰⁸Pb", E: 7.87 },
+    { A: 235, sym: "²³⁵U", E: 7.59 },
+    { A: 238, sym: "²³⁸U", E: 7.57 },
+  ];
+
+  const bindingCanvas = qs("#bindingChart");
+  const bctx = bindingCanvas.getContext("2d");
+
+  function drawBindingChart() {
+    const cssW = bindingCanvas.parentElement.clientWidth - 32;
+    const cssH = 300;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    bindingCanvas.width = cssW * dpr; bindingCanvas.height = cssH * dpr;
+    bindingCanvas.style.width = cssW + "px"; bindingCanvas.style.height = cssH + "px";
+    bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const padL = 50, padR = 20, padT = 20, padB = 40;
+    const plotW = cssW - padL - padR, plotH = cssH - padT - padB;
+    const Amax = 245, Emax = 9.5;
+    const X = A => padL + (A / Amax) * plotW;
+    const Y = E => padT + plotH - (E / Emax) * plotH;
+
+    const textColor = getComputedStyle(document.documentElement).getPropertyValue("--text-muted").trim();
+    const border = getComputedStyle(document.documentElement).getPropertyValue("--border").trim();
+    const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+    const teal = getComputedStyle(document.documentElement).getPropertyValue("--teal").trim();
+    const rose = getComputedStyle(document.documentElement).getPropertyValue("--rose").trim();
+
+    bctx.clearRect(0, 0, cssW, cssH);
+    bctx.strokeStyle = border;
+    bctx.fillStyle = textColor;
+    bctx.font = "11px system-ui";
+    bctx.textAlign = "center";
+    for (let A = 0; A <= Amax; A += 40) {
+      const px = X(A);
+      bctx.beginPath(); bctx.moveTo(px, padT); bctx.lineTo(px, padT + plotH); bctx.globalAlpha = 0.3; bctx.stroke(); bctx.globalAlpha = 1;
+      bctx.fillText(String(A), px, padT + plotH + 16);
+    }
+    bctx.fillText("Massenzahl A", padL + plotW / 2, cssH - 6);
+    bctx.save();
+    bctx.translate(14, padT + plotH / 2);
+    bctx.rotate(-Math.PI / 2);
+    bctx.fillText("E_B / A  [MeV]", 0, 0);
+    bctx.restore();
+
+    bctx.strokeStyle = textColor;
+    bctx.beginPath();
+    bctx.moveTo(padL, padT); bctx.lineTo(padL, padT + plotH); bctx.lineTo(padL + plotW, padT + plotH);
+    bctx.stroke();
+
+    // Kurve
+    bctx.strokeStyle = accent;
+    bctx.lineWidth = 2.5;
+    bctx.beginPath();
+    NUCLIDES.forEach((n, i) => {
+      const px = X(n.A), py = Y(n.E);
+      if (i === 0) bctx.moveTo(px, py); else bctx.lineTo(px, py);
+    });
+    bctx.stroke();
+
+    // Punkte + Labels
+    NUCLIDES.forEach(n => {
+      const px = X(n.A), py = Y(n.E);
+      const isFe = n.A === 56;
+      bctx.beginPath();
+      bctx.arc(px, py, isFe ? 5.5 : 3.5, 0, Math.PI * 2);
+      bctx.fillStyle = isFe ? rose : teal;
+      bctx.fill();
+      bctx.fillStyle = textColor;
+      bctx.font = isFe ? "bold 11px system-ui" : "10px system-ui";
+      bctx.fillText(n.sym, px, py - 12);
+    });
+
+    // Fusion/Spaltung Pfeile
+    bctx.fillStyle = teal;
+    bctx.textAlign = "left";
+    bctx.fillText("← Fusion setzt Energie frei", padL + 4, padT + 14);
+    bctx.textAlign = "right";
+    bctx.fillStyle = rose;
+    bctx.fillText("Spaltung setzt Energie frei →", padL + plotW - 4, padT + 14);
+  }
+
+  drawBindingChart();
+  window.addEventListener("resize", drawBindingChart);
+
+  new StepGuide(qs("#stepguide"), {
+    title: "Reflexion: Kräfte, Austauschteilchen und die Grenzen der Schulphysik",
+    intro: "Auch ohne eigenes Experiment lässt sich viel über die Struktur der Materie verstehen.",
+    steps: [
+      {
+        title: "Austauschteilchen vs. Feldkonzept",
+        body: "<p>In der Elektrodynamik hast du Kräfte über <em>Felder</em> beschrieben (z. B. elektrisches Feld). Das Standardmodell beschreibt Kräfte stattdessen über <em>Austauschteilchen</em> (z. B. Photonen für die elektromagnetische Kraft). Vergleiche beide Vorstellungen: Was leisten sie jeweils, wo stoßen sie an Grenzen?</p>",
+        note: true,
+        notePlaceholder: "Deine Überlegung…",
+        reveal: "<p>Das Feldkonzept ist anschaulich und für viele klassische Rechnungen ausreichend (z. B. Kraft auf eine Ladung im Kondensator). Das Austauschteilchen-Konzept erklärt dagegen, <em>warum</em> es Kräfte überhaupt gibt und wie sie quantenmechanisch vermittelt werden — es ist fundamentaler, aber auch abstrakter. Beide Modelle sind für ihren jeweiligen Anwendungsbereich nützlich.</p>",
+        revealLabel: "Einordnung",
+      },
+      {
+        title: "Fusion und Spaltung",
+        body: "<p>Schau dir die Bindungsenergiekurve an. Erkläre, warum sowohl die Verschmelzung von Wasserstoff zu Helium (wie in der Sonne) als auch die Spaltung von Uran (wie im Kernkraftwerk) Energie freisetzt.</p>",
+        note: true,
+        notePlaceholder: "Deine Erklärung…",
+        reveal: "<p>Beide Prozesse bewegen sich im Diagramm nach <strong>oben</strong> in Richtung des Maximums bei Eisen (Fe-56) — die Bindungsenergie pro Nukleon der Produkte ist größer als die der Ausgangsstoffe. Diese Differenz wird gemäß E = Δm·c² als Energie frei. Bei Elementen schwerer als Eisen setzt Spaltung Energie frei, bei leichteren Elementen Fusion.</p>",
+        revealLabel: "Erklärung",
+      },
+      {
+        title: "Warum CERN und DESY?",
+        body: "<p>Warum lassen sich Quarks, W/Z-Bosonen oder das Higgs-Teilchen nicht in einem Schullabor nachweisen, sondern nur in Anlagen wie dem CERN?</p>",
+        reveal: "<p>Um schwere Teilchen zu erzeugen, muss gemäß E = mc² sehr viel Energie auf kleinstem Raum konzentriert werden — dafür sind kilometergroße Beschleunigerringe und enorme Energien (Billionen Elektronenvolt) nötig, die nur internationale Großforschungseinrichtungen bereitstellen können.</p>",
+        revealLabel: "Erklärung",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>

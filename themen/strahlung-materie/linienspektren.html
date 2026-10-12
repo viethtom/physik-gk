@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linienspektren (Balmer-Serie) — Strahlung und Materie — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <a href="/themen/strahlung-materie/index.html">Strahlung und Materie</a><span class="sep">›</span>
+    <span>Linienspektren</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Erforschung des Mikro- und Makrokosmos</div>
+    <div class="leitfrage">Wie gewinnt man Informationen zum Aufbau der Materie?</div>
+    <div class="schwerpunkte">Energieniveaus der Atomhülle · Linienspektren · Gitterspektrometer</div>
+  </div>
+
+  <h1>Linienspektren des Wasserstoffs</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    Angeregte Wasserstoffatome senden Licht nur bei ganz bestimmten Wellenlängen aus — ein Linienspektrum.
+    Vermisse die sichtbaren Linien der Balmer-Serie (Übergänge auf n = 2) mit einem Gitterspektrometer und
+    bestimme daraus die Rydberg-Konstante.
+  </p>
+
+  <div class="sim-layout">
+    <div class="panel">
+      <h3>Übergang auswählen</h3>
+
+      <div class="control">
+        <label>Elektronenübergang</label>
+        <div class="pill-row" id="transitionButtons"></div>
+      </div>
+
+      <div class="readout"><span class="k">Gitterkonstante g</span><span class="v">1/600 mm</span></div>
+      <div class="readout"><span class="k">Abstand Gitter–Schirm L</span><span class="v">20,0 cm</span></div>
+
+      <svg id="levelDiagram" viewBox="0 0 260 200" style="width:100%; margin-top:14px; background:var(--bg-sunken); border-radius:var(--radius-sm);"></svg>
+
+      <div class="control-row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="btnMessen">📏 Linie messen</button>
+        <button class="btn btn-secondary" id="btnReset">Tabelle leeren</button>
+      </div>
+      <div class="info-note">Die Rydberg-Konstante ist unbekannt — du bestimmst sie aus der Steigung des Diagramms.</div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <canvas id="stage" width="640" height="260"></canvas>
+        <div class="stage-caption">Gitterspektrometer: Beugung 1. Ordnung links und rechts vom Zentralstrahl — Lineal in mm.</div>
+      </div>
+
+      <div class="data-panel">
+        <h3>Messwerttabelle</h3>
+        <div id="tableHost"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:var(--accent)"></span>1/λ über (1/4 − 1/n²)</span>
+          <span><span class="dot" style="background:var(--teal)"></span>Ausgleichsgerade</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">1/λ = R · (1/2² − 1/n²)</div>
+    <p>Die Rydberg-Formel beschreibt die Wellenlängen der Balmer-Serie. Trägst du 1/λ über (1/4 − 1/n²) auf,
+    ergibt sich eine Ursprungsgerade — ihre Steigung ist die Rydberg-Konstante R.</p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Strahlung und Materie · Erforschung des Mikro- und Makrokosmos</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/chart.js"></script>
+<script>
+(function () {
+  const R_TRUE = 1.097373e7; // 1/m, wird NICHT verraten, sondern von den SuS bestimmt
+  const g_grating = 1666.67e-9; // m, 1/600mm
+  const L = 0.20; // m
+
+  const TRANSITIONS = [
+    { n: 3, label: "n=3→2 (Hα)" },
+    { n: 4, label: "n=4→2 (Hβ)" },
+    { n: 5, label: "n=5→2 (Hγ)" },
+    { n: 6, label: "n=6→2 (Hδ)" },
+  ];
+  let currentN = 3;
+
+  function lambdaOf(n) {
+    const invLambda = R_TRUE * (1 / 4 - 1 / (n * n));
+    return 1 / invLambda; // m
+  }
+  function xOnScreen(lambda_m) {
+    const sinT = lambda_m / g_grating;
+    const tanT = sinT / Math.sqrt(1 - sinT * sinT);
+    return L * tanT; // m
+  }
+  function lambdaFromX(x_m) {
+    const sinT = x_m / Math.sqrt(x_m * x_m + L * L);
+    return g_grating * sinT;
+  }
+
+  const canvas = qs("#stage");
+  const ctx = canvas.getContext("2d");
+
+  function setupButtons() {
+    const host = qs("#transitionButtons");
+    TRANSITIONS.forEach(t => {
+      const btn = document.createElement("button");
+      btn.className = "pill";
+      btn.style.cursor = "pointer";
+      btn.textContent = t.label;
+      btn.dataset.n = t.n;
+      btn.addEventListener("click", () => { currentN = t.n; update(); });
+      host.appendChild(btn);
+    });
+    update();
+  }
+  function updateActive() {
+    qsa("#transitionButtons .pill").forEach(b => {
+      const active = Number(b.dataset.n) === currentN;
+      const lambda = lambdaOf(Number(b.dataset.n));
+      b.style.background = active ? wavelengthToRGB(lambda * 1e9) : "";
+      b.style.color = active ? "#fff" : "";
+      b.style.fontWeight = active ? "700" : "400";
+    });
+  }
+
+  function drawLevelDiagram() {
+    const svg = qs("#levelDiagram");
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const levels = [2, 3, 4, 5, 6];
+    const E = n => -13.6 / (n * n); // eV
+    // Skala: E(2)=-3.4eV unten (y=170), E(6)=-0.378eV oben (y=20)
+    const Emin = E(2), Emax = E(6) * 0.4; // etwas Headroom oben
+    function yOf(Ev) {
+      return 170 - (Ev - Emin) / (Emax - Emin) * 150;
+    }
+    levels.forEach(n => {
+      const y = yOf(E(n));
+      const line = svgEl("line", { x1: 20, y1: y, x2: 220, y2: y, stroke: "var(--text-faint)", "stroke-width": 1.5 });
+      svg.appendChild(line);
+      const label = svgEl("text", { x: 226, y: y + 4, "font-size": 11, fill: "var(--text-muted)" });
+      label.textContent = "n=" + n;
+      svg.appendChild(label);
+    });
+    // Pfeil vom aktuellen n zu n=2
+    const y1 = yOf(E(currentN)), y2 = yOf(E(2));
+    const lambda = lambdaOf(currentN);
+    const color = wavelengthToRGB(lambda * 1e9);
+    const arrow = svgEl("line", { x1: 100, y1: y1, x2: 100, y2: y2 + 6, stroke: color, "stroke-width": 2.5 });
+    svg.appendChild(arrow);
+    const head = svgEl("polygon", { points: "95,{y} 105,{y} 100,{y2}".replace(/\{y\}/g, y2 + 6).replace("{y2}", y2), fill: color });
+    svg.appendChild(head);
+  }
+
+  function resizeCanvasForCSS() {
+    const cssW = canvas.parentElement.clientWidth - 32;
+    const cssH = 230;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssW, h: cssH };
+  }
+
+  function draw() {
+    const { w, h } = resizeCanvasForCSS();
+    ctx.fillStyle = "#0a0a0f";
+    ctx.fillRect(0, 0, w, h);
+
+    const lambda = lambdaOf(currentN);
+    const x_m = xOnScreen(lambda);
+    const halfWidthMM = 100;
+    const scale = (w - 40) / (2 * halfWidthMM);
+    const cx = w / 2;
+    const rgb = wavelengthToRGB(lambda * 1e9);
+
+    const bandTop = 20, bandH = 110;
+    // Zentralstrahl (weiß, k=0)
+    ctx.fillStyle = "#e8eaf2";
+    ctx.globalAlpha = 0.9;
+    ctx.fillRect(cx - 1.5, bandTop, 3, bandH);
+    ctx.globalAlpha = 1;
+
+    // Linie bei +x und -x (1. Ordnung)
+    const xPx = x_m * 1000 * scale;
+    [cx + xPx, cx - xPx].forEach(px => {
+      ctx.fillStyle = rgb;
+      ctx.shadowColor = rgb;
+      ctx.shadowBlur = 10;
+      ctx.fillRect(px - 2.5, bandTop, 5, bandH);
+      ctx.shadowBlur = 0;
+    });
+
+    // Lineal
+    const rulerY = bandTop + bandH + 24;
+    ctx.strokeStyle = "#8a91a3";
+    ctx.fillStyle = "#c7cbe0";
+    ctx.font = "11px system-ui";
+    ctx.textAlign = "center";
+    ctx.beginPath();
+    ctx.moveTo(20, rulerY); ctx.lineTo(w - 20, rulerY); ctx.stroke();
+    for (let mm = -100; mm <= 100; mm += 10) {
+      const px = cx + mm * scale;
+      if (px < 20 || px > w - 20) continue;
+      ctx.beginPath();
+      ctx.moveTo(px, rulerY - 5); ctx.lineTo(px, rulerY + 5); ctx.stroke();
+      if (mm % 20 === 0) ctx.fillText(String(mm), px, rulerY + 18);
+    }
+    ctx.fillText("mm", w - 30, rulerY + 18);
+
+    requestAnimationFrame(draw);
+  }
+
+  function update() {
+    updateActive();
+    drawLevelDiagram();
+  }
+
+  qs("#btnMessen").addEventListener("click", () => {
+    const lambda = lambdaOf(currentN);
+    const x_m = xOnScreen(lambda);
+    const noisyX = x_m * (1 + (Math.random() - 0.5) * 0.03);
+    const lambdaMeasured = lambdaFromX(noisyX);
+    table.addRow({
+      n: currentN,
+      x: noisyX * 1000,
+      lambda: lambdaMeasured,
+      invLambda: 1 / lambdaMeasured,
+      xVar: 0.25 - 1 / (currentN * currentN)
+    });
+  });
+  qs("#btnReset").addEventListener("click", () => table.clear());
+
+  const table = new DataTable(qs("#tableHost"), [
+    { key: "n", label: "n", decimals: 0 },
+    { key: "x", label: "x (Schirm)", unit: "mm", decimals: 2 },
+    { key: "lambda", label: "λ", unit: "m", sci: true, decimals: 3 },
+    { key: "invLambda", label: "1/λ", unit: "1/m", sci: true, decimals: 3 },
+  ], {
+    onChange: rows => chart.setPoints(rows.map(r => ({ x: r.xVar, y: r.invLambda })))
+  });
+
+  const chart = new ScatterChart(qs("#chart"), {
+    xLabel: "1/4 − 1/n²", yLabel: "1/λ", yUnit: "1/m",
+    showRegression: true, minPointsForFit: 2
+  });
+
+  setupButtons();
+  draw();
+
+  new StepGuide(qs("#stepguide"), {
+    title: "Geführte Auswertung: Von Spektrallinien zur Rydberg-Konstante",
+    intro: "Miss alle vier Balmer-Linien (Hα bis Hδ).",
+    steps: [
+      {
+        title: "Beobachtung",
+        body: "<p>Wähle nacheinander alle vier Übergänge. Was fällt an den Farben und Positionen der Linien auf? Vergleiche mit dem Energieniveauschema links.</p>",
+        note: true,
+        notePlaceholder: "Deine Beobachtung…",
+      },
+      {
+        title: "Messreihe aufnehmen",
+        body: "<p>Miss für jeden der vier Übergänge die Position x der Linie auf dem Schirm.</p>",
+        hint: "<p>Die Tabelle berechnet dir automatisch λ aus x über die Gittergleichung — du musst nur messen.</p>",
+      },
+      {
+        title: "Diagramm deuten",
+        body: "<p>Das Diagramm zeigt 1/λ über (1/4 − 1/n²). Warum ergibt das eine Ursprungsgerade?</p>",
+        reveal: "<p>Nach der Rydberg-Formel 1/λ = R·(1/4 − 1/n²) ist 1/λ direkt proportional zu (1/4 − 1/n²) — mit der Rydberg-Konstante R als Steigung.</p>",
+        revealLabel: "Erklärung",
+      },
+      {
+        title: "Rydberg-Konstante bestimmen",
+        body: "<p>Lies die Steigung deiner Ausgleichsgeraden ab — das ist direkt R (in 1/m).</p>",
+        reveal: `<p>Literaturwert: R ≈ ${fmtSci(1.097373e7, 4)} 1/m. Wie nah kommst du heran?</p>`,
+        revealLabel: "Vergleichswert",
+      },
+      {
+        title: "Deutung: Energieniveaus",
+        body: "<p>Jede Linie entsteht beim Übergang eines Elektrons von einem höheren Energieniveau n auf n=2. Wie hängt die Energie des emittierten Photons mit der Lage der Niveaus im Diagramm zusammen?</p>",
+        reveal: "<p>E_Photon = E_n − E_2 = h·f = h·c/λ. Je größer der Sprung im Energieniveauschema, desto energiereicher (kurzwelliger) das Photon — das erklärt, warum Hδ (n=6→2) blauer/violetter ist als Hα (n=3→2).</p>",
+        revealLabel: "Deutung",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>

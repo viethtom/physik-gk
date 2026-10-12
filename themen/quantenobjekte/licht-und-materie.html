@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Licht und Materie — Quantenobjekte — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <span>Licht und Materie</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Photonen und Elektronen als Quantenobjekte</div>
+    <div class="leitfrage">Kann das Verhalten von Elektronen und Photonen durch ein gemeinsames Modell beschrieben werden?</div>
+    <div class="schwerpunkte">Wahrscheinlichkeitsinterpretation · Welle-Teilchen-Dualismus · Kopenhagener Deutung</div>
+  </div>
+
+  <h1>Der Quanten-Doppelspalt</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    Schieße einzelne Photonen oder Elektronen einzeln auf einen Doppelspalt und beobachte, wo sie auf dem
+    Schirm landen. Jedes Teilchen landet an einem einzelnen, zufälligen Punkt — aber nach vielen Teilchen
+    entsteht etwas Überraschendes.
+  </p>
+
+  <div class="sim-layout">
+    <div class="panel">
+      <h3>Experiment steuern</h3>
+
+      <div class="control">
+        <label>Teilchenart</label>
+        <div class="pill-row" id="particleButtons">
+          <button class="pill" data-p="photon" style="cursor:pointer;">Photon</button>
+          <button class="pill" data-p="electron" style="cursor:pointer;">Elektron</button>
+        </div>
+      </div>
+
+      <div class="control">
+        <label>Offene Spalte</label>
+        <div class="pill-row" id="slitButtons">
+          <button class="pill" data-n="1" style="cursor:pointer;">1 (Einzelspalt)</button>
+          <button class="pill" data-n="2" style="cursor:pointer;">2 (Doppelspalt)</button>
+        </div>
+      </div>
+
+      <div class="readout"><span class="k">Abgeschossene Teilchen</span><span class="v" id="countReadout">0</span></div>
+
+      <div class="control-row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="btn1">1 Teilchen</button>
+        <button class="btn btn-secondary" id="btn100">100 Teilchen</button>
+      </div>
+      <div class="control-row">
+        <button class="btn btn-secondary" id="btnReset">Zurücksetzen</button>
+      </div>
+      <div class="info-note">Die Simulation zeigt, wo jedes Teilchen einzeln auftrifft — die Trefferpunkte sammeln sich mit der Zeit an.</div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <canvas id="stage" width="640" height="380"></canvas>
+        <div class="stage-caption">Quelle unten, Doppelspalt in der Mitte, Schirm oben — jeder Punkt ist ein einzelnes Teilchen.</div>
+      </div>
+
+      <div class="data-panel">
+        <h3>Trefferverteilung (Häufigkeiten je Bereich)</h3>
+        <div id="binTable"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">Ort: zufällig, einzeln &nbsp;·&nbsp; Verteilung vieler Ereignisse: wellenartiges Muster</div>
+    <p>Jedes einzelne Quantenobjekt zeigt beim Nachweis Teilchencharakter (ein Punkt, ein Ereignis). Die
+    <strong>Wahrscheinlichkeit</strong>, an einem bestimmten Ort registriert zu werden, folgt jedoch einer
+    wellenartigen Verteilung. Das ist die Wahrscheinlichkeitsinterpretation der Quantenmechanik.</p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Quantenobjekte · Photonen und Elektronen als Quantenobjekte</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script>
+(function () {
+  let particleType = "photon";
+  let nSlits = 2;
+  let hits = []; // {bin, jitter}
+  const NBINS = 60;
+  let inFlight = [];
+
+  const canvas = qs("#stage");
+  const ctx = canvas.getContext("2d");
+
+  // Intensität (wie N-Spalt-Interferenz, feste didaktische Parameter)
+  function intensity(u) {
+    // u in [-1,1], normierte Schirmkoordinate
+    const delta = nSlits === 1 ? 0 : u * Math.PI * 6; // Phasenunterschied Nachbarspalt
+    let base;
+    if (nSlits === 1) base = 1;
+    else {
+      base = Math.abs(Math.sin(delta / 2)) < 1e-6 ? 1 :
+        Math.pow(Math.sin(nSlits * delta / 2) / (nSlits * Math.sin(delta / 2)), 2);
+    }
+    const singleSlitEnvelope = Math.pow(Math.sinc ? Math.sinc(u * 3) : sinc(u * 3), 2);
+    const gauss = Math.exp(-Math.pow(u / 0.92, 2) * 1.2);
+    return base * singleSlitEnvelope * gauss;
+  }
+  function sinc(x) { return x === 0 ? 1 : Math.sin(Math.PI * x) / (Math.PI * x); }
+
+  function sampleU() {
+    for (let i = 0; i < 400; i++) {
+      const u = (Math.random() * 2 - 1);
+      const y = Math.random() * 1.05;
+      if (y < intensity(u)) return u;
+    }
+    return 0;
+  }
+
+  function binOf(u) {
+    return Math.min(NBINS - 1, Math.max(0, Math.floor((u + 1) / 2 * NBINS)));
+  }
+
+  const binCounts = new Array(NBINS).fill(0);
+
+  function addParticle(animated) {
+    const u = sampleU();
+    if (animated) {
+      inFlight.push({ u, t: 0 });
+    } else {
+      registerHit(u);
+    }
+  }
+  function registerHit(u) {
+    hits.push({ u, jitter: Math.random() });
+    binCounts[binOf(u)]++;
+    qs("#countReadout").textContent = hits.length;
+    updateBinTable();
+  }
+
+  function setupButtons() {
+    qsa("#particleButtons .pill").forEach(b => {
+      b.addEventListener("click", () => { particleType = b.dataset.p; updateActive(); });
+    });
+    qsa("#slitButtons .pill").forEach(b => {
+      b.addEventListener("click", () => { nSlits = Number(b.dataset.n); updateActive(); resetAll(); });
+    });
+    updateActive();
+  }
+  function updateActive() {
+    qsa("#particleButtons .pill").forEach(b => setPillActive(b, b.dataset.p === particleType));
+    qsa("#slitButtons .pill").forEach(b => setPillActive(b, Number(b.dataset.n) === nSlits));
+  }
+  function setPillActive(b, active) {
+    b.style.background = active ? "var(--accent)" : "";
+    b.style.color = active ? "#fff" : "";
+    b.style.fontWeight = active ? "700" : "400";
+  }
+
+  function resetAll() {
+    hits = []; inFlight = [];
+    binCounts.fill(0);
+    qs("#countReadout").textContent = "0";
+    updateBinTable();
+  }
+
+  const BIN_LABELS_IDX = [];
+  function updateBinTable() {
+    // Zeige 7 zusammengefasste Bereiche
+    const groups = 7;
+    const groupSize = NBINS / groups;
+    const labels = ["Rand links", "", "links von Mitte", "Zentrum", "rechts von Mitte", "", "Rand rechts"];
+    let rowsHtml = "";
+    for (let g = 0; g < groups; g++) {
+      let sum = 0;
+      for (let i = Math.floor(g * groupSize); i < Math.floor((g + 1) * groupSize); i++) sum += binCounts[i];
+      rowsHtml += `<tr><td>${labels[g] || ("Bereich " + (g + 1))}</td><td class="num">${sum}</td></tr>`;
+    }
+    qs("#binTable").innerHTML = `<div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Bereich auf dem Schirm</th><th>Treffer</th></tr></thead>
+      <tbody>${rowsHtml}</tbody></table></div>`;
+  }
+
+  function resizeCanvasForCSS() {
+    const cssW = canvas.parentElement.clientWidth - 32;
+    const cssH = 340;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssW, h: cssH };
+  }
+
+  function draw() {
+    const { w, h } = resizeCanvasForCSS();
+    ctx.fillStyle = "#07080c";
+    ctx.fillRect(0, 0, w, h);
+
+    const screenY = 30, sourceY = h - 24, slitY = h * 0.62;
+    const screenL = 40, screenR = w - 40;
+    const cx = w / 2;
+
+    // Schirm
+    ctx.strokeStyle = "#3a3f52";
+    ctx.beginPath(); ctx.moveTo(screenL, screenY); ctx.lineTo(screenR, screenY); ctx.stroke();
+    // Spalt-Blende
+    ctx.strokeStyle = "#565d73";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    if (nSlits === 1) {
+      ctx.moveTo(screenL, slitY); ctx.lineTo(cx - 6, slitY);
+      ctx.moveTo(cx + 6, slitY); ctx.lineTo(screenR, slitY);
+    } else {
+      ctx.moveTo(screenL, slitY); ctx.lineTo(cx - 22, slitY);
+      ctx.moveTo(cx - 10, slitY); ctx.lineTo(cx + 10, slitY);
+      ctx.moveTo(cx + 22, slitY); ctx.lineTo(screenR, slitY);
+    }
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    // Quelle
+    ctx.fillStyle = particleType === "photon" ? "#ffe27a" : "#8fd3ff";
+    ctx.beginPath(); ctx.arc(cx, sourceY, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#9aa1b1";
+    ctx.font = "11px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("Quelle", cx, sourceY + 16);
+
+    // Trefferpunkte (akkumuliert)
+    ctx.fillStyle = particleType === "photon" ? "#ffe27a" : "#8fd3ff";
+    hits.forEach(hpt => {
+      const x = cx + hpt.u * (screenR - screenL) / 2 * 0.98;
+      const y = screenY - 4 - hpt.jitter * 16;
+      ctx.globalAlpha = 0.75;
+      ctx.beginPath(); ctx.arc(x, y, 1.6, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    // fliegende Teilchen animieren
+    inFlight.forEach(p => { p.t += 0.045; });
+    inFlight = inFlight.filter(p => {
+      const t = p.t;
+      const y0 = sourceY, y1 = slitY, y2 = screenY;
+      let x, y;
+      if (t < 0.5) {
+        const tt = t / 0.5;
+        x = cx; y = y0 + (y1 - y0) * tt;
+      } else if (t < 1) {
+        const tt = (t - 0.5) / 0.5;
+        x = cx + p.u * (screenR - screenL) / 2 * 0.98 * tt;
+        y = y1 + (y2 - y1) * tt;
+      } else {
+        registerHit(p.u);
+        return false;
+      }
+      ctx.fillStyle = particleType === "photon" ? "#ffe27a" : "#8fd3ff";
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(x, y, 3.4, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      return true;
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  qs("#btn1").addEventListener("click", () => addParticle(true));
+  qs("#btn100").addEventListener("click", () => {
+    for (let i = 0; i < 100; i++) addParticle(false);
+  });
+  qs("#btnReset").addEventListener("click", resetAll);
+
+  setupButtons();
+  updateBinTable();
+  draw();
+
+  new StepGuide(qs("#stepguide"), {
+    title: "Reflexion: Welle, Teilchen oder beides?",
+    intro: "Es gibt hier keine Formel zum Ausrechnen — sondern etwas zu beobachten und zu deuten.",
+    steps: [
+      {
+        title: "Einzelereignisse beobachten",
+        body: "<p>Stelle Doppelspalt ein und schieße 10–15 einzelne Teilchen ab (Button „1 Teilchen“). Wo landen sie? Erkennst du ein Muster bei einzelnen Treffern?</p>",
+        note: true,
+        notePlaceholder: "Deine Beobachtung…",
+      },
+      {
+        title: "Muster nach vielen Ereignissen",
+        body: "<p>Klicke jetzt mehrfach „100 Teilchen“ (insgesamt 500+). Was entsteht? Vergleiche danach mit dem Einzelspalt (1 Spalt offen, „Zurücksetzen“ nicht vergessen).</p>",
+        note: true,
+        notePlaceholder: "Was unterscheidet Doppelspalt- und Einzelspalt-Muster?",
+      },
+      {
+        title: "Wahrscheinlichkeitsinterpretation",
+        body: "<p>Wie passt zusammen, dass jedes Teilchen einzeln an einem zufälligen Ort landet, aber viele Teilchen zusammen ein regelmäßiges Wellenmuster ergeben?</p>",
+        reveal: "<p>Jedes Quantenobjekt wird beim Nachweis als <strong>einzelnes</strong> Ereignis registriert (Teilchencharakter). Die <strong>Wahrscheinlichkeit</strong>, an einem bestimmten Ort zu landen, ist aber durch eine wellenartige Größe bestimmt (Bornsche Regel: Wahrscheinlichkeit ∝ Amplitudenquadrat). Bei vielen Ereignissen zeichnet sich diese Wahrscheinlichkeitsverteilung als Interferenzmuster ab.</p>",
+        revealLabel: "Auswertung",
+      },
+      {
+        title: "Interferiert ein Teilchen mit sich selbst?",
+        body: "<p>Beim Doppelspalt entsteht das Interferenzmuster auch dann, wenn jeweils nur ein einziges Teilchen gleichzeitig unterwegs ist. Was bedeutet das für die Vorstellung, durch „welchen Spalt“ das Teilchen fliegt?</p>",
+        note: true,
+        notePlaceholder: "Deine Überlegung…",
+        reveal: "<p>Solange nicht gemessen wird, durch welchen Spalt das Teilchen läuft, muss man beide Möglichkeiten gleichzeitig berücksichtigen (Superposition) — erst der Nachweis auf dem Schirm „entscheidet“ den Ort. Diese Sichtweise ist der Kern der <strong>Kopenhagener Deutung</strong>. Jeder Versuch, den Weg festzustellen, zerstört das Interferenzmuster.</p>",
+        revealLabel: "Kopenhagener Deutung",
+      },
+      {
+        title: "Grenzen der Modelle",
+        body: "<p>Weder das klassische Wellenbild noch das klassische Teilchenbild allein erklärt alle Beobachtungen. Was bedeutet der Begriff „Welle-Teilchen-Dualismus“ vor diesem Hintergrund?</p>",
+        reveal: "<p>Quantenobjekte sind weder klassische Wellen noch klassische Teilchen. Je nach Experiment zeigen sie wellen- oder teilchenartige Aspekte — beide Modelle sind nützliche, aber unvollständige Beschreibungen derselben zugrunde liegenden Realität.</p>",
+        revealLabel: "Einordnung",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>

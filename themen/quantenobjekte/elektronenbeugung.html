@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elektronenbeugung — Quantenobjekte — Physik GK</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="/index.html" class="brand"><span class="brand-mark">λ</span> Physik GK</a>
+    <nav class="main-nav">
+      <a href="/index.html">Start</a>
+      <a href="/themen/index.html">Themen</a>
+      <a href="/erklaervideos/index.html">Erklärvideos</a>
+      <a href="/aufgaben/index.html">Aufgaben</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="breadcrumb">
+    <a href="/index.html">Start</a><span class="sep">›</span>
+    <a href="/themen/index.html">Themen</a><span class="sep">›</span>
+    <span>Elektronenbeugung</span>
+  </div>
+
+  <div class="kontext-box" style="margin-top:20px;">
+    <div class="label">Kontext · Erforschung des Elektrons</div>
+    <div class="leitfrage">Wie können physikalische Eigenschaften wie die Ladung und die Masse eines Elektrons gemessen werden?</div>
+    <div class="schwerpunkte">Streuung von Elektronen an Festkörpern · de-Broglie-Wellenlänge</div>
+  </div>
+
+  <h1>Elektronenbeugung an Graphit</h1>
+  <p class="lead" style="color:var(--text-muted); max-width:70ch;">
+    Schnelle Elektronen werden an polykristallinem Graphit gebeugt und erzeugen auf einem Leuchtschirm
+    konzentrische Ringe — ein typisches Wellenphänomen. Miss den Ringdurchmesser <em>D</em> für verschiedene
+    Beschleunigungsspannungen <em>U</em> und bestimme die de-Broglie-Wellenlänge der Elektronen.
+  </p>
+
+  <div class="sim-layout">
+    <div class="panel">
+      <h3>Beschleunigungsspannung einstellen</h3>
+
+      <div class="control">
+        <label>Beschleunigungsspannung U <span class="val" id="uVal">4000 V</span></label>
+        <input type="range" id="uSlider" min="2500" max="6000" value="4000" step="50">
+      </div>
+
+      <div class="readout"><span class="k">Ringdurchmesser D (Lineal)</span><span class="v" id="dReadout">–</span></div>
+      <div class="readout"><span class="k">Röhrenlänge L (gegeben)</span><span class="v">13,5 cm</span></div>
+      <div class="readout"><span class="k">Netzebenenabstand d (gegeben)</span><span class="v">2,13 · 10⁻¹⁰ m</span></div>
+
+      <div class="control-row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="btnMessen">📏 D messen</button>
+        <button class="btn btn-secondary" id="btnReset">Tabelle leeren</button>
+      </div>
+      <div class="info-note">Formel für D gegeben (kleine Winkel, Bragg-Bedingung): D = 2·L·λ / d</div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <canvas id="stage" width="640" height="320"></canvas>
+        <div class="stage-caption">Leuchtschirm mit Beugungsringen — Lineal in cm.</div>
+      </div>
+
+      <div class="data-panel">
+        <h3>Messwerttabelle</h3>
+        <div id="tableHost"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:var(--accent)"></span>D über 1/√U</span>
+          <span><span class="dot" style="background:var(--teal)"></span>Ausgleichsgerade</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepguide" id="stepguide"></div>
+
+  <div class="formula-box">
+    <div class="label">Merksatz</div>
+    <div class="formula">λ = h / √(2·m<sub>e</sub>·e·U) &nbsp;&nbsp;und&nbsp;&nbsp; D = 2Lλ/d</div>
+    <p>Beide Formeln zusammen ergeben: D ist proportional zu 1/√U. Diese Proportionalität im Diagramm ist die
+    experimentelle Bestätigung der de-Broglie-Hypothese: schnelleren Elektronen (hohes U) entspricht eine
+    kürzere Wellenlänge und damit ein kleinerer Ringdurchmesser.</p>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">Physik Grundkurs · Quantenobjekte · Erforschung des Elektrons</div>
+</footer>
+
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/chart.js"></script>
+<script>
+(function () {
+  const L_tube = 0.135; // m
+  const d_lattice = 2.13e-10; // m
+  const bulbRadius_m = 0.06;
+
+  function lambda_deBroglie(U) {
+    return PHYS.h / Math.sqrt(2 * PHYS.me * PHYS.e * U);
+  }
+  function D_of(U) {
+    return 2 * L_tube * lambda_deBroglie(U) / d_lattice; // m
+  }
+
+  const canvas = qs("#stage");
+  const ctx = canvas.getContext("2d");
+
+  function updateReadouts() {
+    const U = Number(qs("#uSlider").value);
+    qs("#uVal").textContent = `${U} V`;
+    qs("#dReadout").textContent = `${fmt(D_of(U) * 1000, 2)} mm`;
+  }
+  qs("#uSlider").addEventListener("input", updateReadouts);
+
+  function resizeCanvasForCSS() {
+    const cssW = canvas.parentElement.clientWidth - 32;
+    const cssH = 300;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssW, h: cssH };
+  }
+
+  function draw() {
+    const { w, h } = resizeCanvasForCSS();
+    ctx.fillStyle = "#050507";
+    ctx.fillRect(0, 0, w, h);
+
+    const cx = w / 2, cy = h / 2;
+    const bulbPx = Math.min(w, h) / 2 - 30;
+    const scale = bulbPx / bulbRadius_m;
+
+    ctx.strokeStyle = "#3a3f52";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, bulbPx, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Lineal
+    ctx.strokeStyle = "#565d73";
+    ctx.fillStyle = "#9aa1b1";
+    ctx.font = "10px system-ui";
+    ctx.textAlign = "center";
+    for (let cm = -6; cm <= 6; cm++) {
+      const x = cx + (cm / 100) * scale;
+      if (Math.abs(x - cx) > bulbPx) continue;
+      const tick = cm % 1 === 0 ? 7 : 3;
+      ctx.beginPath();
+      ctx.moveTo(x, cy + bulbPx + 4);
+      ctx.lineTo(x, cy + bulbPx + 4 + tick);
+      ctx.stroke();
+      ctx.fillText(String(cm), x, cy + bulbPx + 24);
+    }
+    ctx.fillText("cm", cx + bulbPx + 10, cy + bulbPx + 24);
+
+    // zentraler Fleck
+    ctx.fillStyle = "#dfe3ee";
+    ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+
+    const U = Number(qs("#uSlider").value);
+    const D_m = D_of(U);
+    const r1 = Math.min((D_m / 2) * scale, bulbPx - 6);
+    const r2 = Math.min(r1 * 1.65, bulbPx - 2);
+
+    [{ r: r2, a: 0.35 }, { r: r1, a: 0.9 }].forEach(ring => {
+      ctx.strokeStyle = "#8fd3ff";
+      ctx.shadowColor = "#8fd3ff";
+      ctx.shadowBlur = 10;
+      ctx.globalAlpha = ring.a;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(cx, cy, ring.r, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+
+    requestAnimationFrame(draw);
+  }
+
+  qs("#btnMessen").addEventListener("click", () => {
+    const U = Number(qs("#uSlider").value);
+    const trueD = D_of(U);
+    const noisyD = trueD * (1 + (Math.random() - 0.5) * 0.04);
+    const lambdaExp = noisyD * d_lattice / (2 * L_tube);
+    const lambdaTheo = lambda_deBroglie(U);
+    table.addRow({
+      U, D: noisyD * 1000, invSqrtU: 1 / Math.sqrt(U),
+      lambdaExp, lambdaTheo
+    });
+  });
+  qs("#btnReset").addEventListener("click", () => table.clear());
+
+  const table = new DataTable(qs("#tableHost"), [
+    { key: "U", label: "U", unit: "V", decimals: 0 },
+    { key: "D", label: "D", unit: "mm", decimals: 2 },
+    { key: "lambdaExp", label: "λ (aus D)", unit: "m", sci: true, decimals: 3 },
+    { key: "lambdaTheo", label: "λ (de Broglie)", unit: "m", sci: true, decimals: 3 },
+  ], {
+    onChange: rows => chart.setPoints(rows.map(r => ({ x: r.invSqrtU, y: r.D })))
+  });
+
+  const chart = new ScatterChart(qs("#chart"), {
+    xLabel: "1/√U", yLabel: "D", xUnit: "1/√V", yUnit: "mm",
+    showRegression: true, minPointsForFit: 2
+  });
+
+  updateReadouts();
+  draw();
+
+  new StepGuide(qs("#stepguide"), {
+    title: "Geführte Auswertung: Bestätigt sich die de-Broglie-Hypothese?",
+    intro: "Miss D für mindestens 5 verschiedene Beschleunigungsspannungen U.",
+    steps: [
+      {
+        title: "Beobachtung",
+        body: "<p>Erhöhe U langsam. Was passiert mit dem Durchmesser der Ringe? Passt das zu deiner Erwartung (schnellere Elektronen → kürzere Wellenlänge)?</p>",
+        note: true,
+        notePlaceholder: "Deine Beobachtung…",
+      },
+      {
+        title: "Messreihe aufnehmen",
+        body: "<p>Miss D für mindestens 5 Werte von U zwischen 2500 V und 6000 V.</p>",
+      },
+      {
+        title: "Spalte λ (aus D) vs. λ (de Broglie) vergleichen",
+        body: "<p>Die Tabelle berechnet dir automatisch zwei Wellenlängen: einmal aus deiner Messung von D (über die Bragg-Bedingung), einmal direkt aus der de-Broglie-Formel λ = h/p. Vergleiche beide Spalten für jede Zeile.</p>",
+        note: true,
+        notePlaceholder: "Stimmen die beiden Spalten überein?",
+        reveal: "<p>Beide Werte sollten (im Rahmen der Messgenauigkeit) übereinstimmen. Das ist der entscheidende Beleg: Die aus dem Beugungsbild ermittelte Wellenlänge stimmt mit der von de Broglie vorhergesagten Wellenlänge λ = h/p überein — Elektronen zeigen Welleneigenschaften!</p>",
+        revealLabel: "Auswertung",
+      },
+      {
+        title: "Diagramm deuten",
+        body: "<p>Das Diagramm zeigt D über 1/√U. Warum wurde 1/√U statt U gewählt?</p>",
+        reveal: "<p>λ ist proportional zu 1/√U, und D ist proportional zu λ. Deshalb ist D proportional zu 1/√U — eine Ursprungsgerade, die sich einfach mit einer Ausgleichsgeraden auswerten lässt.</p>",
+        revealLabel: "Erklärung",
+      },
+    ]
+  });
+})();
+</script>
+</body>
+</html>
